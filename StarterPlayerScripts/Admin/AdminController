@@ -1,8 +1,10 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 local PlayerScripts = player:WaitForChild("PlayerScripts")
 
 local StatsFolder = PlayerScripts:WaitForChild("Stats")
@@ -11,6 +13,7 @@ local AdminGui = require(AdminFolder:WaitForChild("AdminGui"))
 local HelperFolder = PlayerScripts:WaitForChild("Helper")
 local Theme = require(HelperFolder:WaitForChild("Theme"))
 local UIHelper = require(HelperFolder:WaitForChild("UIHelper"))
+local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
 local AdminRemotes = Remotes and Remotes:WaitForChild("Admin", 5)
@@ -20,6 +23,8 @@ if not AdminOpsEvent then return end
 
 local AdminGuiScreen = UIHelper.GetOrCreateScreenGui("AdminGUI")
 local ui = AdminGui.Create(AdminGuiScreen)
+
+UIHelper.RegisterWindow(AdminGuiScreen)
 
 local activeSecurityToken = nil
 local searchResult = nil
@@ -156,3 +161,42 @@ AdminOpsEvent.OnClientEvent:Connect(function(success, message, returnData)
 		showNotification(message, not success)
 	end
 end)
+
+-- LOGIKA TOGGLE PANEL ADMIN SECARA DEFENSF
+local isAdmin = player.UserId <= 0 or game.CreatorId == player.UserId or PlayerStatsConfig.ADMIN_USER_IDS[player.UserId]
+
+local function toggleAdminPanel()
+	if not isAdmin then return end
+	ui.AdminPanel.Visible = not ui.AdminPanel.Visible
+	if ui.AdminPanel.Visible then
+		UIHelper.BringToFront(AdminGuiScreen)
+	end
+end
+
+-- Cari tombol Admin di NavMenu secara aman
+task.spawn(function()
+	local NavMenu = playerGui:WaitForChild("NavMenu", 5)
+	local RightMenu = NavMenu and NavMenu:WaitForChild("RightMenu", 5)
+	local AdminBtn = RightMenu and (RightMenu:FindFirstChild("AdminBtn") or RightMenu:FindFirstChild("AdminButton") or RightMenu:FindFirstChild("AdminControlBtn"))
+
+	if AdminBtn then
+		if isAdmin then
+			AdminBtn.Visible = true
+			if AdminBtn:IsA("GuiButton") then
+				AdminBtn.MouseButton1Click:Connect(toggleAdminPanel)
+			end
+		else
+			AdminBtn.Visible = false
+		end
+	end
+end)
+
+-- Tambahkan Keyboard Shortcut (Tilde / Backquote atau F2) jika pemain adalah Admin
+if isAdmin then
+	UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then return end
+		if input.KeyCode == Enum.KeyCode.Backquote or input.KeyCode == Enum.KeyCode.F2 then
+			toggleAdminPanel()
+		end
+	end)
+end
