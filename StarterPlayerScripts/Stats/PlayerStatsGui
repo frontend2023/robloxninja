@@ -18,43 +18,74 @@ function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
 	stroke.Thickness = 1
 	stroke.Parent = ui.StatPanel
 
-	local PanelTitle = Instance.new("TextLabel")
-	PanelTitle.Size = UDim2.new(1, 0, 0, 35)
-	PanelTitle.BackgroundTransparency = 1
-	PanelTitle.Font = Theme.FontBold
-	PanelTitle.TextColor3 = Theme.Colors.TextLight
-	PanelTitle.TextSize = 13
-	PanelTitle.Text = "CHARACTER STATUS"
-	PanelTitle.Parent = ui.StatPanel
+	-- GRADIENT LATAR BELAKANG METALLIK RPG PREMIUM
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(38, 38, 38)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(18, 18, 18))
+	})
+	gradient.Rotation = 90
+	gradient.Parent = ui.StatPanel
 
-	UIHelper.MakeDraggable(ui.StatPanel, PanelTitle)
+	-- AREA KEPALA IDENTITAS JATI DIRI RPG (AVATAR, RANK, POWER, POINTS)
+	ui.AvatarImage = Instance.new("ImageLabel")
+	ui.AvatarImage.Name = "AvatarImage"
+	ui.AvatarImage.Size = UDim2.new(0, 40, 0, 40)
+	ui.AvatarImage.Position = UDim2.new(0, 12, 0, 10)
+	ui.AvatarImage.BackgroundColor3 = Theme.Colors.TabBarBg
+	ui.AvatarImage.BorderSizePixel = 0
+	ui.AvatarImage.Parent = ui.StatPanel
 
-	ui.CloseBtn = Instance.new("TextButton")
-	ui.CloseBtn.Name = "CloseBtn"
-	ui.CloseBtn.Size = UDim2.new(0, 16, 0, 16)
-	ui.CloseBtn.Position = UDim2.new(1, -24, 0, 9)
-	ui.CloseBtn.BackgroundColor3 = Theme.Colors.Danger
-	ui.CloseBtn.Text = ""
-	ui.CloseBtn.Parent = ui.StatPanel
+	local avatarCorner = Instance.new("UICorner")
+	avatarCorner.CornerRadius = UDim.new(1, 0) -- Lingkaran Sempurna
+	avatarCorner.Parent = ui.AvatarImage
 
-	local closeCorner = Instance.new("UICorner")
-	closeCorner.CornerRadius = UDim.new(1, 0)
-	closeCorner.Parent = ui.CloseBtn
+	local avatarStroke = Instance.new("UIStroke")
+	avatarStroke.Color = Color3.fromRGB(60, 60, 60)
+	avatarStroke.Thickness = 1
+	avatarStroke.Parent = ui.AvatarImage
 
-	ui.LevelLabel = Instance.new("TextLabel")
-	ui.LevelLabel.Size = UDim2.new(0.5, -15, 0, 20)
-	ui.LevelLabel.Position = UDim2.new(0, 10, 0, 35)
-	ui.LevelLabel.BackgroundTransparency = 1
-	ui.LevelLabel.Font = Theme.FontRegular
-	ui.LevelLabel.TextColor3 = Theme.Colors.TextDark
-	ui.LevelLabel.TextSize = 11
-	ui.LevelLabel.TextXAlignment = Enum.TextXAlignment.Left
-	ui.LevelLabel.Text = "Level: --"
-	ui.LevelLabel.Parent = ui.StatPanel
+	ui.NameLabel = Instance.new("TextLabel")
+	ui.NameLabel.Name = "NameLabel"
+	ui.NameLabel.Size = UDim2.new(0, 95, 0, 16)
+	ui.NameLabel.Position = UDim2.new(0, 58, 0, 10)
+	ui.NameLabel.BackgroundTransparency = 1
+	ui.NameLabel.Font = Theme.FontBold
+	ui.NameLabel.TextColor3 = Theme.Colors.TextLight
+	ui.NameLabel.TextSize = 11
+	ui.NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+	ui.NameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	ui.NameLabel.Text = player.DisplayName
+	ui.NameLabel.Parent = ui.StatPanel
+
+	ui.ClassLabel = Instance.new("TextLabel")
+	ui.ClassLabel.Name = "ClassLabel"
+	ui.ClassLabel.Size = UDim2.new(0, 95, 0, 14)
+	ui.ClassLabel.Position = UDim2.new(0, 58, 0, 24)
+	ui.ClassLabel.BackgroundTransparency = 1
+	ui.ClassLabel.Font = Theme.FontRegular
+	ui.ClassLabel.TextColor3 = Theme.Colors.TextMuted
+	ui.ClassLabel.TextSize = 10
+	ui.ClassLabel.TextXAlignment = Enum.TextXAlignment.Left
+	ui.ClassLabel.Text = "Class: Shinobi"
+	ui.ClassLabel.Parent = ui.StatPanel
+
+	ui.PowerLabel = Instance.new("TextLabel")
+	ui.PowerLabel.Name = "PowerLabel"
+	ui.PowerLabel.Size = UDim2.new(0, 90, 0, 16)
+	ui.PowerLabel.Position = UDim2.new(1, -102, 0, 10)
+	ui.PowerLabel.BackgroundTransparency = 1
+	ui.PowerLabel.Font = Theme.FontBold
+	ui.PowerLabel.TextColor3 = Color3.fromRGB(240, 180, 80) -- Emas/Warning
+	ui.PowerLabel.TextSize = 11
+	ui.PowerLabel.TextXAlignment = Enum.TextXAlignment.Right
+	ui.PowerLabel.Text = "POWER: --"
+	ui.PowerLabel.Parent = ui.StatPanel
 
 	ui.PointsLabel = Instance.new("TextLabel")
-	ui.PointsLabel.Size = UDim2.new(0.5, -10, 0, 20)
-	ui.PointsLabel.Position = UDim2.new(0.5, 5, 0, 35)
+	ui.PointsLabel.Name = "PointsLabel"
+	ui.PointsLabel.Size = UDim2.new(0, 90, 0, 14)
+	ui.PointsLabel.Position = UDim2.new(1, -102, 0, 24)
 	ui.PointsLabel.BackgroundTransparency = 1
 	ui.PointsLabel.Font = Theme.FontBold
 	ui.PointsLabel.TextColor3 = Theme.Colors.PointGreen
@@ -63,7 +94,29 @@ function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
 	ui.PointsLabel.Text = "Points: 0"
 	ui.PointsLabel.Parent = ui.StatPanel
 
-	local TabBar = UIHelper.MakeRoundedFrame(ui.StatPanel, "TabBar", UDim2.new(1, -20, 0, 26), UDim2.new(0, 10, 0, 60), Theme.Colors.TabBarBg, Theme.RowCornerRadius)
+	ui.CloseBtn = Instance.new("TextButton")
+	ui.CloseBtn.Name = "CloseBtn"
+	ui.CloseBtn.Size = UDim2.new(0, 14, 0, 14)
+	ui.CloseBtn.Position = UDim2.new(1, -22, 0, 10)
+	ui.CloseBtn.BackgroundColor3 = Theme.Colors.Danger
+	ui.CloseBtn.Text = ""
+	ui.CloseBtn.ZIndex = 5
+	ui.CloseBtn.Parent = ui.StatPanel
+
+	local closeCorner = Instance.new("UICorner")
+	closeCorner.CornerRadius = UDim.new(1, 0)
+	closeCorner.Parent = ui.CloseBtn
+
+	-- Drag Handle tersembunyi di area atas agar menyeret GUI terasa alami
+	ui.DragHandle = Instance.new("Frame")
+	ui.DragHandle.Name = "DragHandle"
+	ui.DragHandle.Size = UDim2.new(1, 0, 0, 52)
+	ui.DragHandle.BackgroundTransparency = 1
+	ui.DragHandle.Parent = ui.StatPanel
+
+	UIHelper.MakeDraggable(ui.StatPanel, ui.DragHandle)
+
+	local TabBar = UIHelper.MakeRoundedFrame(ui.StatPanel, "TabBar", UDim2.new(1, -20, 0, 26), UDim2.new(0, 10, 0, 56), Theme.Colors.TabBarBg, Theme.RowCornerRadius)
 
 	ui.BaseTabBtn = Instance.new("TextButton")
 	ui.BaseTabBtn.Size = UDim2.new(0.5, 0, 1, 0)
@@ -86,19 +139,34 @@ function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
 
 	ui.ActiveIndicator = UIHelper.MakeRoundedFrame(TabBar, "Indicator", UDim2.new(0.5, 0, 0, 2), UDim2.new(0, 0, 1, -2), Theme.Colors.PointGreen, 1)
 
-	ui.BaseStatsFrame = UIHelper.MakeRoundedFrame(ui.StatPanel, "BaseStatsTab", UDim2.new(1, -20, 0, 195), UDim2.new(0, 10, 0, 92), Theme.Colors.Background, 0)
-	ui.StatsInfoFrame = UIHelper.MakeRoundedFrame(ui.StatPanel, "StatsInfoTab", UDim2.new(1, -20, 0, 195), UDim2.new(0, 10, 0, 92), Theme.Colors.Background, 0)
-	ui.BaseStatsFrame.BackgroundTransparency = 1
-	ui.StatsInfoFrame.BackgroundTransparency = 1
+	-- ASPEK RESPONSIF: SCROLLINGFRAME UNTUK MENGHINDARI CLIPPING DI MOBILE
+	local function createLockedScrollingFrame(name, heightOffset)
+		local sf = Instance.new("ScrollingFrame")
+		sf.Name = name
+		sf.Size = UDim2.new(1, -20, 0, 195)
+		sf.Position = UDim2.new(0, 10, 0, 88)
+		sf.BackgroundTransparency = 1
+		sf.BorderSizePixel = 0
+		sf.ScrollBarThickness = 2
+		sf.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
+		sf.ScrollingDirection = Enum.ScrollingDirection.Y -- Kunci gulir Y saja (Tidak ada scroll kanan!)
+		sf.CanvasSize = UDim2.new(0, 0, 0, heightOffset)
+		sf.Parent = ui.StatPanel
+		return sf
+	end
+
+	ui.BaseStatsFrame = createLockedScrollingFrame("BaseStatsTab", 174)
+	ui.StatsInfoFrame = createLockedScrollingFrame("StatsInfoTab", 210) -- Muat 10 baris ter-skala
 	ui.StatsInfoFrame.Visible = false
 
+	-- TOMBOL RESET STATUS (WARNA MERAH DUMMY REDUP UX KELAS DUNIA)
 	ui.ResetBtn = Instance.new("TextButton")
 	ui.ResetBtn.Size = UDim2.new(0, 100, 0, 26)
-	ui.ResetBtn.Position = UDim2.new(0, 10, 1, -34)
-	ui.ResetBtn.BackgroundColor3 = Theme.Colors.Danger
+	ui.ResetBtn.Position = UDim2.new(0, 20, 1, -34)
+	ui.ResetBtn.BackgroundColor3 = Color3.fromRGB(60, 35, 35) -- Merah-abu elegan mumpuni
 	ui.ResetBtn.Font = Theme.FontBold
-	ui.ResetBtn.TextColor3 = Theme.Colors.TextLight
-	ui.ResetBtn.TextSize = 11
+	ui.ResetBtn.TextColor3 = Color3.fromRGB(240, 100, 100) -- Teks merah lembut bersahabat
+	ui.ResetBtn.TextSize = 10
 	ui.ResetBtn.Text = "RESET STATUS"
 	ui.ResetBtn.Parent = ui.StatPanel
 
@@ -106,9 +174,14 @@ function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
 	resetCorner.CornerRadius = UDim.new(0, 6)
 	resetCorner.Parent = ui.ResetBtn
 
+	local resetStroke = Instance.new("UIStroke")
+	resetStroke.Color = Color3.fromRGB(110, 50, 50)
+	resetStroke.Thickness = 1
+	resetStroke.Parent = ui.ResetBtn
+
 	ui.ApplyBtn = Instance.new("TextButton")
 	ui.ApplyBtn.Size = UDim2.new(0, 100, 0, 26)
-	ui.ApplyBtn.Position = UDim2.new(1, -110, 1, -34)
+	ui.ApplyBtn.Position = UDim2.new(1, -120, 1, -34)
 	ui.ApplyBtn.BackgroundColor3 = Theme.Colors.Success
 	ui.ApplyBtn.Font = Theme.FontBold
 	ui.ApplyBtn.TextColor3 = Theme.Colors.TextLight
@@ -125,6 +198,11 @@ function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
 	for i, stat in ipairs(baseStatNames) do
 		local yPos = (i - 1) * 29
 		local row = UIHelper.MakeRoundedFrame(ui.BaseStatsFrame, "Row_" .. stat, UDim2.new(1, 0, 0, 25), UDim2.new(0, 0, 0, yPos), Theme.Colors.RowBg, Theme.RowCornerRadius)
+
+		local rowStroke = Instance.new("UIStroke")
+		rowStroke.Color = Color3.fromRGB(45, 45, 45)
+		rowStroke.Thickness = 1
+		rowStroke.Parent = row
 
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(0.6, 0, 1, 0)
@@ -168,6 +246,7 @@ function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
 		plusCorner.Parent = plusBtn
 
 		ui.StatRows[stat] = {
+			RowObject = row,
 			Label = label, 
 			PlusButton = plusBtn,
 			MinusButton = minusBtn

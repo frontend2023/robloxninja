@@ -17,16 +17,17 @@ local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
 local StatsRemotes = Remotes and Remotes:WaitForChild("Stats", 5)
 local StatUpdateEvent = StatsRemotes and StatsRemotes:WaitForChild("StatUpdateEvent", 5)
 local AllocateStatRequest = StatsRemotes and StatsRemotes:WaitForChild("AllocateStatRequest", 5)
-local ResetStatsRequest = StatsRemotes and StatsRemotes:WaitForChild("ResetStatsRequest", 5)
 
 if not StatUpdateEvent or not AllocateStatRequest then
 	error("[RPG ERROR] RemoteEvent status tidak lengkap!")
 end
 
+-- TATA LETAK INFO TURUNAN CLIENT (MENAMPILKAN TOTAL ARMOR SECARA INDAH)
 local DERIVED_STATS_LAYOUT = {
 	{Key = "MaxHP", Label = "Max HP", IsPercent = false, Color = Color3.fromRGB(240, 90, 90)},
 	{Key = "Damage", Label = "Base Damage", IsPercent = false, Color = Color3.fromRGB(240, 180, 80)},
 	{Key = "Defence", Label = "Defence (DEF+Armor)", IsPercent = false, Color = Color3.fromRGB(80, 180, 240)},
+	{Key = "Armor", Label = "Total Armor (equipment)", IsPercent = false, Color = Color3.fromRGB(120, 160, 240)},
 	{Key = "AttackSpeed", Label = "Attack Speed (ASPD)", IsPercent = false, Color = Color3.fromRGB(80, 220, 150)},
 	{Key = "DodgeChance", Label = "Dodge Chance", IsPercent = true, Color = Color3.fromRGB(240, 220, 80)},
 	{Key = "HitRating", Label = "Hit Rating", IsPercent = true, Color = Color3.fromRGB(240, 220, 80)},
@@ -43,6 +44,16 @@ local serverData = nil
 local pendingAllocations = {ATK = 0, DEF = 0, VIT = 0, AGI = 0, DEX = 0, LUCK = 0}
 local equipmentBonuses = {ATK = 0, DEF = 0, VIT = 0, AGI = 0, DEX = 0, LUCK = 0}
 local virtualPoints = 0
+
+-- LOAD AVATAR PLAYER SECARA NATIVE BERKECEPATAN TINGGI
+task.spawn(function()
+	local thumbType = Enum.ThumbnailType.HeadShot
+	local thumbSize = Enum.ThumbnailSize.Size100x100
+	local content, isReady = Players:GetUserThumbnailAsync(player.UserId, thumbType, thumbSize)
+	if isReady and content then
+		ui.AvatarImage.Image = content
+	end
+end)
 
 local function selectTab(tabType)
 	if tabType == "BASE" then
@@ -83,11 +94,29 @@ local function formatValue(val, isPercent)
 	end
 end
 
+-- KALKULASI POWER SCORE SECARA REAL-TIME MEMBERIKAN VISUAL FEEDBACK SENSASIONAL
+local function calculatePowerScore(level, baseStats)
+	local baseSum = 0
+	for _, val in pairs(baseStats) do
+		baseSum = baseSum + val
+	end
+	return (level * 100) + (baseSum * 15)
+end
+
 local function updateVisuals()
 	if not serverData then return end
 
-	ui.LevelLabel.Text = "Level: " .. tostring(serverData.Level)
+	-- Gabungkan data level & display name agar terlihat padat & menonjol
+	ui.NameLabel.Text = player.DisplayName .. " (Lv. " .. tostring(serverData.Level) .. ")"
 	ui.PointsLabel.Text = "Points: " .. tostring(virtualPoints)
+
+	-- Update kalkulasi Power secara instan setiap kali poin dinaikkan
+	local currentStatsSnapshot = {}
+	for stat, val in pairs(serverData.BaseStats) do
+		currentStatsSnapshot[stat] = val + (pendingAllocations[stat] or 0)
+	end
+	local powerScore = calculatePowerScore(serverData.Level, currentStatsSnapshot)
+	ui.PowerLabel.Text = "POWER: " .. string.format('%,d', powerScore)
 
 	local hasAnyPending = false
 
@@ -105,8 +134,14 @@ local function updateVisuals()
 		row.PlusButton.Visible = (virtualPoints > 0 and (baseVal + pendingVal) < PlayerStatsConfig.STAT_CAP)
 		row.MinusButton.Visible = (pendingVal > 0)
 
+		-- PENDAPAN GLOWING HIJAU SEGAR SAAT STATUS MENINGKAT (VISUAL FEEDBACK FORUM)
 		if pendingVal > 0 then
 			hasAnyPending = true
+			row.RowObject.BackgroundColor3 = Color3.fromRGB(35, 75, 45) -- Hijau glowing tipis
+			row.RowObject:FindFirstChildOfClass("UIStroke").Color = Color3.fromRGB(80, 180, 100)
+		else
+			row.RowObject.BackgroundColor3 = Theme.Colors.RowBg
+			row.RowObject:FindFirstChildOfClass("UIStroke").Color = Color3.fromRGB(45, 45, 45)
 		end
 	end
 
