@@ -93,7 +93,7 @@ function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
 	ui.StatsInfoFrame.Visible = false
 
 	ui.ResetBtn = Instance.new("TextButton")
-	ui.ResetBtn.Size = UDim2.new(0.5, -15, 0, 26)
+	ui.ResetBtn.Size = UDim2.new(0, 100, 0, 26)
 	ui.ResetBtn.Position = UDim2.new(0, 10, 1, -34)
 	ui.ResetBtn.BackgroundColor3 = Theme.Colors.Danger
 	ui.ResetBtn.Font = Theme.FontBold
@@ -107,8 +107,8 @@ function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
 	resetCorner.Parent = ui.ResetBtn
 
 	ui.ApplyBtn = Instance.new("TextButton")
-	ui.ApplyBtn.Size = UDim2.new(0.5, -10, 0, 26)
-	ui.ApplyBtn.Position = UDim2.new(0.5, 5, 1, -34)
+	ui.ApplyBtn.Size = UDim2.new(0, 100, 0, 26)
+	ui.ApplyBtn.Position = UDim2.new(1, -110, 1, -34)
 	ui.ApplyBtn.BackgroundColor3 = Theme.Colors.Success
 	ui.ApplyBtn.Font = Theme.FontBold
 	ui.ApplyBtn.TextColor3 = Theme.Colors.TextLight
@@ -213,26 +213,27 @@ function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
 		}
 	end
 
-	-- PANEL KONFIRMASI PEMBELIAN RESET STATUS (POP-UP OVERLAY)
+	-- PANEL KONFIRMASI PEMBELIAN RESET STATUS (POP-UP OVERLAY PRESISI SISI CLIENT)
 	ui.ConfirmPanel = UIHelper.MakeRoundedFrame(ui.StatPanel, "ConfirmPanel", UDim2.new(1, 0, 1, 0), UDim2.new(0, 0, 0, 0), Color3.fromRGB(15, 15, 15), Theme.CornerRadius)
 	ui.ConfirmPanel.BackgroundTransparency = 0.15
 	ui.ConfirmPanel.ZIndex = 10
 	ui.ConfirmPanel.Visible = false
 
 	local ConfirmTitle = Instance.new("TextLabel")
-	ConfirmTitle.Size = UDim2.new(1, 0, 0, 80)
-	ConfirmTitle.Position = UDim2.new(0, 0, 0, 60)
+	ConfirmTitle.Size = UDim2.new(1, -24, 0, 110)
+	ConfirmTitle.Position = UDim2.new(0, 12, 0, 45)
 	ConfirmTitle.BackgroundTransparency = 1
 	ConfirmTitle.Font = Theme.FontBold
 	ConfirmTitle.TextColor3 = Theme.Colors.TextLight
-	ConfirmTitle.TextSize = 12
-	ConfirmTitle.Text = "RESET ALL STATS?\n\nThis will reset all your stats to default starting values.\nCost: 99 Robux"
+	ConfirmTitle.TextSize = 11
+	ConfirmTitle.Text = "RESET ALL STATS?\n\nThis will reset all your stats to default starting values.\n\nCost: 99 Robux"
+	ConfirmTitle.TextWrapped = true
 	ConfirmTitle.ZIndex = 11
 	ConfirmTitle.Parent = ui.ConfirmPanel
 
 	ui.ConfirmCancelBtn = Instance.new("TextButton")
 	ui.ConfirmCancelBtn.Size = UDim2.new(0, 100, 0, 30)
-	ui.ConfirmCancelBtn.Position = UDim2.new(0.5, -110, 0, 180)
+	ui.ConfirmCancelBtn.Position = UDim2.new(0, 20, 0, 180) -- 20px padding dari kiri
 	ui.ConfirmCancelBtn.BackgroundColor3 = Theme.Colors.RowBg
 	ui.ConfirmCancelBtn.Font = Theme.FontBold
 	ui.ConfirmCancelBtn.TextColor3 = Theme.Colors.TextLight
@@ -247,7 +248,7 @@ function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
 
 	ui.ConfirmOkBtn = Instance.new("TextButton")
 	ui.ConfirmOkBtn.Size = UDim2.new(0, 100, 0, 30)
-	ui.ConfirmOkBtn.Position = UDim2.new(0.5, 10, 0, 180)
+	ui.ConfirmOkBtn.Position = UDim2.new(1, -120, 0, 180) -- 20px padding dari kanan (260 - 120 = 140)
 	ui.ConfirmOkBtn.BackgroundColor3 = Theme.Colors.Success
 	ui.ConfirmOkBtn.Font = Theme.FontBold
 	ui.ConfirmOkBtn.TextColor3 = Theme.Colors.TextLight
