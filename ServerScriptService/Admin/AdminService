@@ -22,11 +22,10 @@ game:BindToClose(function()
 end)
 
 local function verifyAdmin(player)
+	-- LOLOSKAN VERIFIKASI SECARA OTOMATIS JIKA DIJALANKAN DI ROBLOX STUDIO
 	if RunService:IsStudio() or player.UserId <= 0 or game.CreatorId == player.UserId or PlayerStatsConfig.ADMIN_USER_IDS[player.UserId] then
-		print("[ADMIN DEBUG - SERVER] verifyAdmin PASSED untuk player:", player.Name)
 		return true
 	end
-	print("[ADMIN DEBUG - SERVER] verifyAdmin FAILED untuk player:", player.Name, "- Kicking player.")
 	player:Kick("[SECURITY] Akses Admin Ilegal.")
 	return false
 end
@@ -42,7 +41,6 @@ local function validateToken(userId, token)
 end
 
 AdminOpsEvent.OnServerEvent:Connect(function(player, op, payload)
-	print("[ADMIN DEBUG - SERVER] Menerima sinyal OnServerEvent. Op:", tostring(op))
 	if isShuttingDown or not verifyAdmin(player) then return end
 
 	if op == "OP_RT_55" then
@@ -53,7 +51,6 @@ AdminOpsEvent.OnServerEvent:Connect(function(player, op, payload)
 	elseif op == "OP_S_77" then
 		local rawQuery = tostring(payload):lower()
 		local query = string.match(rawQuery, "^%s*(.-)%s*$") or ""
-		print("[ADMIN DEBUG - SERVER] Mencari player dengan query nama:", query)
 		
 		local foundPlayer = nil
 		for _, p in ipairs(Players:GetPlayers()) do
@@ -67,14 +64,12 @@ AdminOpsEvent.OnServerEvent:Connect(function(player, op, payload)
 		
 		if foundPlayer then
 			local data = StatService.GetPlayerData(foundPlayer.UserId)
-			print("[ADMIN DEBUG - SERVER] Player DITEMUKAN. Nama:", foundPlayer.Name, "Level:", data and data.Level or 1)
 			AdminOpsEvent:FireClient(player, true, "Pemain ditemukan!", {
 				Name = foundPlayer.Name,
 				UserId = foundPlayer.UserId,
 				Level = data and data.Level or 1
 			})
 		else
-			print("[ADMIN DEBUG - SERVER] Player TIDAK DITEMUKAN untuk query:", query)
 			AdminOpsEvent:FireClient(player, false, "Pemain tidak ditemukan!")
 		end
 	

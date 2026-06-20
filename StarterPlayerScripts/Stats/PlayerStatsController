@@ -78,7 +78,7 @@ local function formatValue(val, isPercent)
 	end
 end
 
--- KALKULASI POWER SCORE SECARA REAL-TIME MEMBERIKAN VISUAL FEEDBACK SENSASIONAL
+-- KALKULASI POWER SCORE SECARA REAL-TIME
 local function calculatePowerScore(level, baseStats)
 	local baseSum = 0
 	for _, val in pairs(baseStats) do
@@ -117,15 +117,21 @@ local function updateVisuals()
 		row.PlusButton.Visible = (virtualPoints > 0 and (baseVal + pendingVal) < PlayerStatsConfig.STAT_CAP)
 		row.MinusButton.Visible = (pendingVal > 0)
 
-		-- DESAIN HIBRIDA: TRANSPARANSI PENUH DEKORASI ESTETIK
+		-- DESAIN HIBRIDA: NONAKTIFKAN BORDER JIKA KOSONG, AKTIFKAN JIKA UPGRADE
+		local stroke = row.RowObject:FindFirstChildOfClass("UIStroke")
 		if pendingVal > 0 then
 			hasAnyPending = true
 			row.RowObject.BackgroundTransparency = 0.85 -- Pendaran hijau transparan sangat tipis
 			row.RowObject.BackgroundColor3 = Color3.fromRGB(80, 180, 100)
-			row.RowObject:FindFirstChildOfClass("UIStroke").Color = Color3.fromRGB(80, 180, 100)
+			if stroke then
+				stroke.Enabled = true
+				stroke.Color = Color3.fromRGB(80, 180, 100)
+			end
 		else
 			row.RowObject.BackgroundTransparency = 1 -- Transparan penuh (menghilangkan kotak abu-abu solid)
-			row.RowObject:FindFirstChildOfClass("UIStroke").Color = Color3.fromRGB(45, 45, 45)
+			if stroke then
+				stroke.Enabled = false -- MENIADAKAN GARIS PEMBATAS SECARA TOTAL PADA BARIS KOSONG
+			end
 		end
 	end
 
