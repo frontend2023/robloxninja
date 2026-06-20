@@ -1,0 +1,299 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local PlayerScripts = player:WaitForChild("PlayerScripts")
+local HelperFolder = PlayerScripts:WaitForChild("Helper")
+local Theme = require(HelperFolder:WaitForChild("Theme"))
+local UIHelper = require(HelperFolder:WaitForChild("UIHelper"))
+
+local AdminGui = {}
+
+local function makeRoundedFrame(parent, name, size, pos, bgCol, radius)
+	local frame = Instance.new("Frame")
+	frame.Name = name
+	frame.Size = size
+	frame.Position = pos
+	frame.BackgroundColor3 = bgCol
+	frame.BorderSizePixel = 0
+	frame.Parent = parent
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, radius)
+	corner.Parent = frame
+	return frame
+end
+
+function AdminGui.Create(adminGuiScreen)
+	local ui = {}
+
+	ui.AdminPanel = makeRoundedFrame(adminGuiScreen, "AdminPanel", UDim2.new(0, 420, 0, 330), UDim2.new(0.5, -210, 0.5, -165), Theme.Colors.Background, Theme.CornerRadius)
+	ui.AdminPanel.Visible = false
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(45, 45, 45)
+	stroke.Thickness = 1
+	stroke.Parent = ui.AdminPanel
+
+	local PanelTitle = Instance.new("TextLabel")
+	PanelTitle.Size = UDim2.new(1, 0, 0, 35)
+	PanelTitle.BackgroundTransparency = 1
+	PanelTitle.Font = Theme.FontBold
+	PanelTitle.TextColor3 = Theme.Colors.TextLight
+	PanelTitle.TextSize = 13
+	PanelTitle.Text = "ADMIN CONTROL PANEL"
+	PanelTitle.Parent = ui.AdminPanel
+
+	UIHelper.MakeDraggable(ui.AdminPanel, PanelTitle)
+
+	ui.CloseBtn = Instance.new("TextButton")
+	ui.CloseBtn.Name = "CloseBtn"
+	ui.CloseBtn.Size = UDim2.new(0, 16, 0, 16)
+	ui.CloseBtn.Position = UDim2.new(1, -24, 0, 9)
+	ui.CloseBtn.BackgroundColor3 = Theme.Colors.Danger
+	ui.CloseBtn.Text = ""
+	ui.CloseBtn.Parent = ui.AdminPanel
+
+	local closeCorner = Instance.new("UICorner")
+	closeCorner.CornerRadius = UDim.new(1, 0)
+	closeCorner.Parent = ui.CloseBtn
+
+	local SearchFrame = makeRoundedFrame(ui.AdminPanel, "SearchFrame", UDim2.new(1, -20, 0, 26), UDim2.new(0, 10, 0, 36), Theme.Colors.TabBarBg, Theme.RowCornerRadius)
+
+	ui.SearchBox = Instance.new("TextBox")
+	ui.SearchBox.Size = UDim2.new(1, -110, 1, 0)
+	ui.SearchBox.Position = UDim2.new(0, 10, 0, 0)
+	ui.SearchBox.BackgroundTransparency = 1
+	ui.SearchBox.Font = Theme.FontRegular
+	ui.SearchBox.TextColor3 = Theme.Colors.TextLight
+	ui.SearchBox.TextSize = 11
+	ui.SearchBox.TextXAlignment = Enum.TextXAlignment.Left
+	ui.SearchBox.PlaceholderText = "Search player name..."
+	ui.SearchBox.PlaceholderColor3 = Theme.Colors.TextDark
+	ui.SearchBox.Text = ""
+	ui.SearchBox.Parent = SearchFrame
+
+	ui.SearchBtn = Instance.new("TextButton")
+	ui.SearchBtn.Size = UDim2.new(0, 42, 1, -4)
+	ui.SearchBtn.Position = UDim2.new(1, -88, 0, 2)
+	ui.SearchBtn.BackgroundColor3 = Theme.Colors.RowBg
+	ui.SearchBtn.Font = Theme.FontBold
+	ui.SearchBtn.TextColor3 = Theme.Colors.TextLight
+	ui.SearchBtn.TextSize = 10
+	ui.SearchBtn.Text = "FIND"
+	ui.SearchBtn.Parent = SearchFrame
+
+	local searchCorner = Instance.new("UICorner")
+	searchCorner.CornerRadius = UDim.new(0, 4)
+	searchCorner.Parent = ui.SearchBtn
+
+	ui.LockBtn = Instance.new("TextButton")
+	ui.LockBtn.Size = UDim2.new(0, 42, 1, -4)
+	ui.LockBtn.Position = UDim2.new(1, -44, 0, 2)
+	ui.LockBtn.BackgroundColor3 = Theme.Colors.RowBg
+	ui.LockBtn.Font = Theme.FontBold
+	ui.LockBtn.TextColor3 = Theme.Colors.TextLight
+	ui.LockBtn.TextSize = 10
+	ui.LockBtn.Text = "LOCK"
+	ui.LockBtn.Parent = SearchFrame
+
+	local lockCorner = Instance.new("UICorner")
+	lockCorner.CornerRadius = UDim.new(0, 4)
+	lockCorner.Parent = ui.LockBtn
+
+	ui.TargetLabel = Instance.new("TextLabel")
+	ui.TargetLabel.Size = UDim2.new(1, -20, 0, 20)
+	ui.TargetLabel.Position = UDim2.new(0, 10, 0, 64)
+	ui.TargetLabel.BackgroundTransparency = 1
+	ui.TargetLabel.Font = Theme.FontBold
+	ui.TargetLabel.TextColor3 = Theme.Colors.TextDark
+	ui.TargetLabel.TextSize = 11
+	ui.TargetLabel.TextXAlignment = Enum.TextXAlignment.Left
+	ui.TargetLabel.Text = "Locked Target: None"
+	ui.TargetLabel.Parent = ui.AdminPanel
+
+	local TabBar = makeRoundedFrame(ui.AdminPanel, "TabBar", UDim2.new(1, -20, 0, 26), UDim2.new(0, 10, 0, 86), Theme.Colors.TabBarBg, Theme.RowCornerRadius)
+
+	ui.PlayerTabBtn = Instance.new("TextButton")
+	ui.PlayerTabBtn.Size = UDim2.new(0.5, 0, 1, 0)
+	ui.PlayerTabBtn.BackgroundTransparency = 1
+	ui.PlayerTabBtn.Font = Theme.FontBold
+	ui.PlayerTabBtn.TextSize = 10
+	ui.PlayerTabBtn.Text = "PLAYER CONTROL"
+	ui.PlayerTabBtn.TextColor3 = Theme.Colors.TextLight
+	ui.PlayerTabBtn.Parent = TabBar
+
+	ui.DatabaseTabBtn = Instance.new("TextButton")
+	ui.DatabaseTabBtn.Size = UDim2.new(0.5, 0, 1, 0)
+	ui.DatabaseTabBtn.Position = UDim2.new(0.5, 0, 0, 0)
+	ui.DatabaseTabBtn.BackgroundTransparency = 1
+	ui.DatabaseTabBtn.Font = Theme.FontBold
+	ui.DatabaseTabBtn.TextSize = 10
+	ui.DatabaseTabBtn.Text = "DATABASE OPS"
+	ui.DatabaseTabBtn.TextColor3 = Theme.Colors.TextMuted
+	ui.DatabaseTabBtn.Parent = TabBar
+
+	ui.ActiveIndicator = makeRoundedFrame(TabBar, "Indicator", UDim2.new(0.5, 0, 0, 2), UDim2.new(0, 0, 1, -2), Theme.Colors.PointGreen, 1)
+
+	ui.PlayerTabFrame = makeRoundedFrame(ui.AdminPanel, "PlayerTab", UDim2.new(1, -20, 0, 150), UDim2.new(0, 10, 0, 118), Theme.Colors.Background, 0)
+	ui.DatabaseTabFrame = makeRoundedFrame(ui.AdminPanel, "DatabaseTab", UDim2.new(1, -20, 0, 150), UDim2.new(0, 10, 0, 118), Theme.Colors.Background, 0)
+	ui.PlayerTabFrame.BackgroundTransparency = 1
+	ui.DatabaseTabFrame.BackgroundTransparency = 1
+	ui.DatabaseTabFrame.Visible = false
+
+	local function makeInputRow(parent, name, labelText, yPos)
+		local row = makeRoundedFrame(parent, name, UDim2.new(1, 0, 0, 28), UDim2.new(0, 0, 0, yPos), Theme.Colors.RowBg, Theme.RowCornerRadius)
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(0.4, 0, 1, 0)
+		label.Position = UDim2.new(0, 8, 0, 0)
+		label.BackgroundTransparency = 1
+		label.Font = Theme.FontRegular
+		label.TextColor3 = Theme.Colors.TextLight
+		label.TextSize = 11
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.Text = labelText
+		label.Parent = row
+
+		local input = Instance.new("TextBox")
+		input.Size = UDim2.new(0.3, -10, 1, -6)
+		input.Position = UDim2.new(0.4, 5, 0, 3)
+		input.BackgroundColor3 = Theme.Colors.Header
+		input.Font = Theme.FontRegular
+		input.TextColor3 = Theme.Colors.TextLight
+		input.TextSize = 11
+		input.PlaceholderText = "Amt..."
+		input.PlaceholderColor3 = Theme.Colors.TextDark
+		input.Text = ""
+		input.Parent = row
+
+		local inputCorner = Instance.new("UICorner")
+		inputCorner.CornerRadius = UDim.new(0, 4)
+		inputCorner.Parent = input
+
+		local executeBtn = Instance.new("TextButton")
+		executeBtn.Size = UDim2.new(0.3, -10, 1, -6)
+		executeBtn.Position = UDim2.new(0.7, 5, 0, 3)
+		executeBtn.BackgroundColor3 = Theme.Colors.Success
+		executeBtn.Font = Theme.FontBold
+		executeBtn.TextColor3 = Theme.Colors.TextLight
+		executeBtn.TextSize = 11
+		executeBtn.Text = "ADD"
+		executeBtn.Parent = row
+
+		local btnCorner = Instance.new("UICorner")
+		btnCorner.CornerRadius = UDim.new(0, 4)
+		btnCorner.Parent = executeBtn
+
+		return input, executeBtn
+	end
+
+	ui.LevelInput, ui.LevelBtn = makeInputRow(ui.PlayerTabFrame, "LevelRow", "Add Level", 10)
+	ui.PointsInput, ui.PointsBtn = makeInputRow(ui.PlayerTabFrame, "PointsRow", "Add Stats Points", 48)
+
+	ui.ResetPlayerBtn = Instance.new("TextButton")
+	ui.ResetPlayerBtn.Size = UDim2.new(1, 0, 0, 28)
+	ui.ResetPlayerBtn.Position = UDim2.new(0, 0, 0, 10)
+	ui.ResetPlayerBtn.BackgroundColor3 = Theme.Colors.RowBg
+	ui.ResetPlayerBtn.Font = Theme.FontBold
+	ui.ResetPlayerBtn.TextColor3 = Theme.Colors.Danger
+	ui.ResetPlayerBtn.TextSize = 11
+	ui.ResetPlayerBtn.Text = "RESET LOCKED TARGET DATABASE & KICK"
+	ui.ResetPlayerBtn.Parent = ui.DatabaseTabFrame
+
+	local rpCorner = Instance.new("UICorner")
+	rpCorner.CornerRadius = UDim.new(0, 4)
+	rpCorner.Parent = ui.ResetPlayerBtn
+
+	ui.ResetGlobalBtn = Instance.new("TextButton")
+	ui.ResetGlobalBtn.Size = UDim2.new(1, 0, 0, 28)
+	ui.ResetGlobalBtn.Position = UDim2.new(0, 0, 0, 48)
+	ui.ResetGlobalBtn.BackgroundColor3 = Theme.Colors.Danger
+	ui.ResetGlobalBtn.Font = Theme.FontBold
+	ui.ResetGlobalBtn.TextColor3 = Theme.Colors.TextLight
+	ui.ResetGlobalBtn.TextSize = 11
+	ui.ResetGlobalBtn.Text = "RESET ENTIRE GAME DATABASE & KICK ALL"
+	ui.ResetGlobalBtn.Parent = ui.DatabaseTabFrame
+
+	local rgCorner = Instance.new("UICorner")
+	rgCorner.CornerRadius = UDim.new(0, 4)
+	rgCorner.Parent = ui.ResetGlobalBtn
+
+	ui.ConfirmPanel = makeRoundedFrame(ui.AdminPanel, "ConfirmPanel", UDim2.new(1, 0, 1, 0), UDim2.new(0, 0, 0, 0), Color3.fromRGB(15, 15, 15), Theme.CornerRadius)
+	ui.ConfirmPanel.BackgroundTransparency = 0.1
+	ui.ConfirmPanel.ZIndex = 10
+	ui.ConfirmPanel.Visible = false
+
+	local ConfirmTitle = Instance.new("TextLabel")
+	ConfirmTitle.Size = UDim2.new(1, 0, 0, 60)
+	ConfirmTitle.Position = UDim2.new(0, 0, 0, 40)
+	ConfirmTitle.BackgroundTransparency = 1
+	ConfirmTitle.Font = Theme.FontBold
+	ConfirmTitle.TextColor3 = Theme.Colors.Danger
+	ConfirmTitle.TextSize = 14
+	ConfirmTitle.Text = "WARNING: IRREVERSIBLE ACTION\nType 'RESET' to confirm"
+	ConfirmTitle.ZIndex = 11
+	ConfirmTitle.Parent = ui.ConfirmPanel
+
+	ui.ConfirmInput = Instance.new("TextBox")
+	ui.ConfirmInput.Size = UDim2.new(0, 180, 0, 32)
+	ui.ConfirmInput.Position = UDim2.new(0.5, -90, 0, 120)
+	ui.ConfirmInput.BackgroundColor3 = Theme.Colors.Background
+	ui.ConfirmInput.Font = Theme.FontBold
+	ui.ConfirmInput.TextColor3 = Theme.Colors.TextLight
+	ui.ConfirmInput.TextSize = 14
+	ui.ConfirmInput.PlaceholderText = "..."
+	ui.ConfirmInput.Text = ""
+	ui.ConfirmInput.ZIndex = 11
+	ui.ConfirmInput.Parent = ui.ConfirmPanel
+
+	local ciCorner = Instance.new("UICorner")
+	ciCorner.CornerRadius = UDim.new(0, 4)
+	ciCorner.Parent = ui.ConfirmInput
+
+	ui.ConfirmCancelBtn = Instance.new("TextButton")
+	ui.ConfirmCancelBtn.Size = UDim2.new(0, 85, 0, 30)
+	ui.ConfirmCancelBtn.Position = UDim2.new(0.5, -90, 0, 165)
+	ui.ConfirmCancelBtn.BackgroundColor3 = Theme.Colors.RowBg
+	ui.ConfirmCancelBtn.Font = Theme.FontBold
+	ui.ConfirmCancelBtn.TextColor3 = Theme.Colors.TextLight
+	ui.ConfirmCancelBtn.TextSize = 11
+	ui.ConfirmCancelBtn.Text = "CANCEL"
+	ui.ConfirmCancelBtn.ZIndex = 11
+	ui.ConfirmCancelBtn.Parent = ui.ConfirmPanel
+
+	local ccCorner = Instance.new("UICorner")
+	ccCorner.CornerRadius = UDim.new(0, 4)
+	ccCorner.Parent = ui.ConfirmCancelBtn
+
+	ui.ConfirmOkBtn = Instance.new("TextButton")
+	ui.ConfirmOkBtn.Size = UDim2.new(0, 85, 0, 30)
+	ui.ConfirmOkBtn.Position = UDim2.new(0.5, 5, 0, 165)
+	ui.ConfirmOkBtn.BackgroundColor3 = Theme.Colors.Danger
+	ui.ConfirmOkBtn.Font = Theme.FontBold
+	ui.ConfirmOkBtn.TextColor3 = Theme.Colors.TextLight
+	ui.ConfirmOkBtn.TextSize = 11
+	ui.ConfirmOkBtn.Text = "CONFIRM"
+	ui.ConfirmOkBtn.ZIndex = 11
+	ui.ConfirmOkBtn.Parent = ui.ConfirmPanel
+
+	local coCorner = Instance.new("UICorner")
+	coCorner.CornerRadius = UDim.new(0, 4)
+	coCorner.Parent = ui.ConfirmOkBtn
+
+	ui.NotificationLabel = Instance.new("TextLabel")
+	ui.NotificationLabel.Size = UDim2.new(1, -20, 0, 24)
+	ui.NotificationLabel.Position = UDim2.new(0, 10, 1, -34)
+	ui.NotificationLabel.BackgroundColor3 = Theme.Colors.Header
+	ui.NotificationLabel.Font = Theme.FontRegular
+	ui.NotificationLabel.TextColor3 = Theme.Colors.PointGreen
+	ui.NotificationLabel.TextSize = 10
+	ui.NotificationLabel.Text = "Ready..."
+	ui.NotificationLabel.Parent = ui.AdminPanel
+
+	local notifCorner = Instance.new("UICorner")
+	notifCorner.CornerRadius = UDim.new(0, 4)
+	notifCorner.Parent = ui.NotificationLabel
+
+	return ui
+end
+
+return AdminGui

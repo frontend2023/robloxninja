@@ -1,0 +1,124 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+
+local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
+local ServerStatsFolder = ServerScriptService:WaitForChild("Stats")
+local StatService = require(ServerStatsFolder:WaitForChild("StatService"))
+
+local RemotesFolder = ReplicatedStorage:WaitForChild("Remotes")
+local StatsRemotesFolder = RemotesFolder:WaitForChild("Stats")
+local HealthUpdateEvent = StatsRemotesFolder:WaitForChild("HealthUpdateEvent")
+
+local HealthBarService = {}
+local SessionHP = {}
+
+local function syncHealthToClient(player)
+	local hp = SessionHP[player.UserId]
+	if not hp then return end
+
+	local data = StatService.GetPlayerData(player.UserId)
+	if not data then return end
+
+	local maxHP = data.DerivedStats.MaxHP or PlayerStatsConfig.INITIAL_PLAYER_INFO.HP
+	HealthUpdateEvent:FireClient(player, hp, maxHP)
+end
+
+local function onCharacterAdded(character)
+	local player = Players:GetPlayerFromCharacter(character)
+	if player then
+		task.wait(0.5)
+		if SessionHP[player.UserId] then
+			syncHealthToClient(player)
+		end
+	end
+end
+
+local function onPlayerAdded(player)
+	local data = nil
+	local timeout = 10
+	local elapsed = 0
+
+	while not data and elapsed < timeout do
+		data = StatService.GetPlayerData(player.UserId)
+		if not data then
+			task.wait(0.1)
+			elapsed = elapsed + 0.1
+		end
+	end
+
+	if not data then
+		warn("[HEALTH ERROR] Gagal mensinkronisasikan HP karena data stats tidak termuat!")
+		return
+	end
+
+	local maxHP = data.DerivedStats.MaxHP or PlayerStatsConfig.INITIAL_PLAYER_INFO.HP
+	SessionHP[player.UserId] = maxHP
+
+	player.CharacterAdded:Connect(onCharacterAdded)
+	if player.Character then
+		task.spawn(onCharacterAdded, player.Character)
+	end
+end
+
+local function onPlayerRemoving(player)
+	SessionHP[player.UserId] = nil
+end
+
+Players.PlayerAdded:Connect(onPlayerAdded)
+Players.PlayerRemoving:Connect(onPlayerRemoving)
+
+for _, player in ipairs(Players:GetPlayers()) do
+	task.spawn(onPlayerAdded, player)
+end
+
+if StatService.OnStatsUpdated then
+	StatService.OnStatsUpdated(function(player, oldMaxHP, newMaxHP)
+		local hp = SessionHP[player.UserId]
+		if not hp then return end
+
+		local hpRatio = hp / oldMaxHP
+		SessionHP[player.UserId] = math.clamp(math.round(newMaxHP * hpRatio), 1, newMaxHP)
+		syncHealthToClient(player)
+	end)
+end
+
+function HealthBarService.GetHP(userId)
+	return SessionHP[userId] or 0
+end
+
+function HealthBarService.ApplyDamage(player, amount)
+	local hp = SessionHP[player.UserId]
+	if not hp then return 0 end
+
+	local data = StatService.GetPlayerData(player.UserId)
+	if not data then return 0 end
+
+	local maxHP = data.DerivedStats.MaxHP or PlayerStatsConfig.INITIAL_PLAYER_INFO.HP
+	local newHP = math.clamp(hp - amount, 0, maxHP)
+
+	SessionHP[player.UserId] = newHP
+	syncHealthToClient(player)
+
+	return newHP
+end
+
+function HealthBarService.Heal(player, amount)
+	local hp = SessionHP[player.UserId]
+	if not hp then return end
+
+	local data = StatService.GetPlayerData(player.UserId)
+	if not data then return end
+
+	local maxHP = data.DerivedStats.MaxHP or PlayerStatsConfig.INITIAL_PLAYER_INFO.HP
+	local newHP = math.clamp(hp + amount, 0, maxHP)
+
+	SessionHP[player.UserId] = newHP
+	syncHealthToClient(player)
+end
+
+function HealthBarService.SyncHP(player)
+	syncHealthToClient(player)
+end
+
+return HealthBarService

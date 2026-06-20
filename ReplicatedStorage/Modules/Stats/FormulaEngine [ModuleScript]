@@ -1,0 +1,58 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
+
+local FormulaEngine = {}
+
+local function ensureNumber(val, default)
+	return (type(val) == "number") and val or default
+end
+
+function FormulaEngine.CalculateHP(level, vit)
+	return (ensureNumber(level, 1) * 10) + (ensureNumber(vit, 5) * 20)
+end
+
+function FormulaEngine.CalculateDamage(atk)
+	return ensureNumber(atk, 5) * 5
+end
+
+function FormulaEngine.CalculateAttackSpeed(agi)
+	local speed = 1 + (ensureNumber(agi, 5) * 0.01)
+	return math.min(speed, PlayerStatsConfig.LIMITS.MAX_ATTACK_SPEED)
+end
+
+function FormulaEngine.CalculateDodge(agi)
+	local dodge = ensureNumber(agi, 5) * 0.0025
+	return math.min(dodge, PlayerStatsConfig.LIMITS.MAX_DODGE_CHANCE)
+end
+
+function FormulaEngine.CalculateHitRating(dex)
+	return 1.00 + ((ensureNumber(dex, 5) - 5) * 0.0005)
+end
+
+function FormulaEngine.CalculateCritChance(luck)
+	local crit = ensureNumber(luck, 5) * 0.0015
+	return math.min(crit, PlayerStatsConfig.LIMITS.MAX_CRIT_CHANCE)
+end
+
+function FormulaEngine.CalculateEffectiveDefense(baseDef, armor, armorPen)
+	baseDef = ensureNumber(baseDef, 5)
+	armor = ensureNumber(armor, 0)
+	armorPen = math.min(ensureNumber(armorPen, 0), PlayerStatsConfig.LIMITS.MAX_ARMOR_PENETRATION)
+
+	local raw = (baseDef + armor) * (1 - armorPen)
+	raw = math.max(0, raw)
+
+	if raw > PlayerStatsConfig.DEFENSE_SOFTENING_THRESHOLD then
+		local excess = raw - PlayerStatsConfig.DEFENSE_SOFTENING_THRESHOLD
+		raw = PlayerStatsConfig.DEFENSE_SOFTENING_THRESHOLD + (excess * (1 - PlayerStatsConfig.DEFENSE_SOFTENING_PENALTY))
+	end
+
+	return raw
+end
+
+function FormulaEngine.CalculateFinalHitChance(hitRating, targetDodge)
+	local chance = ensureNumber(hitRating, 1) - ensureNumber(targetDodge, 0)
+	return math.clamp(chance, PlayerStatsConfig.LIMITS.MIN_HIT_CHANCE, PlayerStatsConfig.LIMITS.MAX_HIT_CHANCE)
+end
+
+return FormulaEngine

@@ -1,0 +1,74 @@
+print("[DEBUG] Loading Script: " .. script:GetFullName())
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
+local DatabaseFolder = ServerScriptService:WaitForChild("Database")
+local PlayerStatsDatabase = require(DatabaseFolder:WaitForChild("PlayerStats"))
+local ServerStatsFolder = ServerScriptService:WaitForChild("Stats")
+local StatService = require(ServerStatsFolder:WaitForChild("StatService"))
+local RemotesFolder = ReplicatedStorage:WaitForChild("Remotes")
+local AdminRemotesFolder = RemotesFolder:WaitForChild("Admin")
+local AdminOpsEvent = AdminRemotesFolder:WaitForChild("AdminOpsEvent")
+local AdminService = {}
+local ActiveTokens = {}
+local isShuttingDown = false
+game:BindToClose(function() isShuttingDown = true end)
+local function verifyAdmin(player)
+	if player.UserId <= 0 or game.CreatorId == player.UserId or PlayerStatsConfig.ADMIN_USER_IDS[player.UserId] then return true end
+	player:Kick("[SECURITY] Akses Admin Ilegal.")
+	return false
+end
+local function validateToken(userId, token)
+	local data = ActiveTokens[userId]
+	if data and data.Token == token and (os.time() - data.Time) < 30 then ActiveTokens[userId] = nil return true end
+	ActiveTokens[userId] = nil
+	return false
+end
+AdminOpsEvent.OnServerEvent:Connect(function(player, op, payload)
+	if isShuttingDown or not verifyAdmin(player) then return end
+	if op == "OP_RT_55" then
+		local newToken = tostring(math.random(100000, 999999))
+		ActiveTokens[player.UserId] = {Token = newToken, Time = os.time()}
+		AdminOpsEvent:FireClient(player, true, "TOKEN_GRANTED", newToken)
+	elseif op == "OP_S_77" then
+		local query = tostring(payload):lower()
+		local foundPlayer = nil
+		for _, p in ipairs(Players:GetPlayers()) do if p.Name:lower() == query or p.DisplayName:lower() == query then foundPlayer = p break end end
+		if foundPlayer then
+			local data = StatService.GetPlayerData(foundPlayer.UserId)
+			AdminOpsEvent:FireClient(player, true, "Pemain ditemukan!", {Name = foundPlayer.Name, UserId = foundPlayer.UserId, Level = data and data.Level or 1})
+		else AdminOpsEvent:FireClient(player, false, "Pemain tidak ditemukan!") end
+	elseif op == "OP_L_88" then
+		local targetPlayer = Players:GetPlayerByUserId(tonumber(payload.UserId))
+		if targetPlayer then
+			StatService.AddLevel(targetPlayer, tonumber(payload.Amount) or 1)
+			local data = StatService.GetPlayerData(targetPlayer.UserId)
+			AdminOpsEvent:FireClient(player, true, "Level diperbarui.", {Name = targetPlayer.Name, UserId = targetPlayer.UserId, Level = data.Level})
+		end
+	elseif op == "OP_P_99" then
+		local targetPlayer = Players:GetPlayerByUserId(tonumber(payload.UserId))
+		if targetPlayer then
+			local data = StatService.GetPlayerData(targetPlayer.UserId)
+			if data then
+				data.Points = math.max(0, data.Points + (tonumber(payload.Amount) or 0))
+				StatService.SyncPlayerData(targetPlayer)
+				AdminOpsEvent:FireClient(player, true, "Poin diperbarui.", {Name = targetPlayer.Name, UserId = targetPlayer.UserId, Level = data.Level})
+			end
+		end
+	elseif op == "OP_RP_00" then
+		if validateToken(player.UserId, payload.Token) then
+			local targetUserId = tonumber(payload.TargetUserId)
+			local targetPlayer = Players:GetPlayerByUserId(targetUserId)
+			PlayerStatsDatabase.ResetPlayerData(targetUserId)
+			if targetPlayer then targetPlayer:Kick("Data di-reset.") end
+			AdminOpsEvent:FireClient(player, true, "Database target di-reset.")
+		else AdminOpsEvent:FireClient(player, false, "Sesi keamanan reset gagal!") end
+	elseif op == "OP_RG_11" then
+		if validateToken(player.UserId, payload.Token) then
+			PlayerStatsDatabase.IncrementGlobalVersion()
+			for _, p in ipairs(Players:GetPlayers()) do p:Kick("Global Reset [VER_Q].") end
+		else AdminOpsEvent:FireClient(player, false, "Sesi keamanan reset gagal!") end
+	end
+end)
+return AdminService

@@ -1,0 +1,151 @@
+📄 COMBAT FLOW SPEC v1.1
+(RUNTIME SERVER EXECUTION RULE)
+🧠 PURPOSE
+
+Dokumen ini menjelaskan:
+
+Urutan pasti (deterministic order) bagaimana 1 attack diproses di server.
+
+Ini adalah “runtime rule”, bukan design atau module.
+
+⚔️ 1. COMBAT ENTRY POINT
+📡 Trigger
+Client → Server sends:
+AttackEvent(targetId)
+🎯 Server Responsibility:
+validate request
+resolve combat fully
+return result
+🔁 2. MAIN COMBAT FLOW (STRICT ORDER)
+
+Urutan ini WAJIB TIDAK BOLEH BERUBAH
+
+🧩 STEP 1 — VALIDATION
+Check:
+- attacker exists
+- target exists
+- both alive
+- distance valid (if needed)
+
+❌ If fail → cancel attack
+
+🧩 STEP 2 — HIT CHECK
+Final Hit Chance =
+Hit Rating - Target Dodge Chance
+Clamp 0%–100%
+
+Roll:
+
+If Random > Final Hit Chance → MISS
+
+👉 If MISS:
+
+return result immediately
+END COMBAT FLOW
+🧩 STEP 3 — BASE DAMAGE CALCULATION
+Base Damage = ATK × 5
+🧩 STEP 4 — DEFENSE CALCULATION
+Effective Defence =
+(DEF + Armor) - Armor Penetration
+Min = 0
+🧩 STEP 5 — CRITICAL CHECK
+Crit Chance = LUCK × 0.15%
+
+Roll:
+
+If Random ≤ Crit Chance → CRIT
+Else → NORMAL
+🧩 STEP 6 — DAMAGE RESOLUTION
+NORMAL HIT:
+Final Damage = Base Damage - Effective Defence
+CRIT HIT:
+Final Damage =
+(Base Damage + Crit Bonus) - Effective Defence
+RULE:
+Minimum Damage = 1
+🧩 STEP 7 — APPLY DAMAGE
+Target.CurrentHP -= Final Damage
+🧩 STEP 8 — DEATH CHECK
+If Target.CurrentHP ≤ 0:
+→ Trigger Death Event
+→ Stop all actions
+🧩 STEP 9 — RESULT SYNC
+
+Server sends to client:
+
+CombatResultEvent {
+    resultType: MISS / HIT / CRIT,
+    damage: number,
+    targetHP: number
+}
+⚖️ 3. GLOBAL COMBAT RULES
+🧠 RULE 1 — SERVER AUTHORITY
+All calculations are server-side only
+Client never calculates damage
+🧠 RULE 2 — ORDER IS FIXED
+Hit → Damage → Defence → Crit → Apply Damage
+
+❌ cannot be rearranged
+
+🧠 RULE 3 — CLAMP RULES
+Hit Chance: 0–100%
+Attack Speed: max 3.0
+Damage minimum: 1
+🧠 RULE 4 — NO NEGATIVE DAMAGE
+If damage < 1 → set to 1
+🧠 RULE 5 — ONE ATTACK = ONE RESULT
+
+No stacking hits unless explicitly triggered by attack speed system.
+
+🔄 4. EDGE CASE HANDLING
+❗ INVALID TARGET
+If target not valid:
+→ cancel attack silently
+❗ SIMULTANEOUS DEATH
+If both HP ≤ 0 same tick:
+→ attacker wins priority OR server rule decides
+
+(you can later define PvP rule)
+
+❗ ZERO HIT CHANCE
+If Final Hit Chance ≤ 0:
+→ guaranteed MISS
+❗ OVER DAMAGE
+If damage > HP:
+→ HP = 0 (no negative HP)
+📊 5. OUTPUT TYPES
+
+Server only produces 3 outcomes:
+
+❌ MISS
+no damage applied
+⚔️ HIT
+normal damage applied
+💥 CRITICAL HIT
+amplified damage applied
+🧠 6. DESIGN INTENT
+
+This system ensures:
+
+✔ predictable combat flow
+✔ easy debugging
+✔ anti-exploit structure
+✔ clear separation of systems
+✔ modular coding compatibility
+
+🚀 FINAL STATUS
+📦 FILE 4 STATUS:
+
+✔ completes missing link between:
+
+v1.1 STAT SYSTEM
+IMPLEMENTATION MAPPING
+
+✔ makes coding deterministic
+✔ removes ambiguity in combat logic
+
+🧠 SIMPLE SUMMARY
+
+v1.1 = rules
+Implementation Mapping = structure
+Combat Flow Spec = runtime execution order

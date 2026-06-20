@@ -1,0 +1,59 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
+
+local Combat = {}
+
+-- Database runtime pelacakan jeda waktu klik serangan terakhir pemain
+local LastAttackTime = {}
+
+-- Validasi jarak melee (Maksimum toleransi server 15 studs)
+function Combat.ValidateProximity(attackerChar, targetChar)
+	if not attackerChar or not targetChar then 
+		return false, "Karakter penyerang atau target tidak valid" 
+	end
+
+	local attackerRoot = attackerChar:FindFirstChild("HumanoidRootPart")
+	local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+
+	if not attackerRoot or not targetRoot then 
+		return false, "Komponen HumanoidRootPart tubuh tidak lengkap" 
+	end
+
+	local success, distance = pcall(function()
+		return (attackerRoot.Position - targetRoot.Position).Magnitude
+	end)
+
+	if not success then
+		return false, "Gagal melakukan kalkulasi jarak fisik"
+	end
+
+	if distance > 15 then
+		return false, "Jarak penyerang terlalu jauh (" .. tostring(math.round(distance)) .. " studs)"
+	end
+
+	return true
+end
+
+-- Validasi kecepatan serang (Anti-Attack Speed Hack)
+function Combat.ValidateCooldown(userId, attackSpeed)
+	local currentTime = os.clock()
+	local lastAttack = LastAttackTime[userId] or 0
+
+	-- Jeda minimum = 1 / AttackSpeed
+	local requiredCooldown = 1 / attackSpeed
+
+	if (currentTime - lastAttack) < requiredCooldown then
+		return false, "Frekuensi serangan melampaui batas kecepatan serang atribut AGI"
+	end
+
+	-- Simpan timestamp serangan jika valid
+	LastAttackTime[userId] = currentTime
+	return true
+end
+
+-- Membersihkan data pelacakan jika pemain keluar permainan
+function Combat.ClearCooldownTrack(userId)
+	LastAttackTime[userId] = nil
+end
+
+return Combat

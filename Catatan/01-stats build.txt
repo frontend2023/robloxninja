@@ -1,0 +1,307 @@
+✅ ROBLOX RPG PLAYER STAT SYSTEM
+
+VERSION 1.1 BALANCED CORE (READY FOR SIMULATION + MULTIPLAYER)
+
+BASE STATS
+
+ATK
+= Increases Damage
+
+DEF
+= Reduces Incoming Damage (Flat Reduction)
+
+VIT
+= Increases HP
+
+AGI
+= Increases Attack Speed and Dodge Chance
+
+DEX
+= Increases Hit Rating
+
+LUCK
+= Increases Critical Chance
+
+PLAYER INFO STATS
+
+HP
+Damage
+Defence
+Armor
+Attack Speed (ASPD)
+Dodge Chance
+Hit Rating
+Critical Chance
+Critical Damage
+Armor Penetration
+
+INITIAL STATS (LEVEL 1)
+
+ATK = 5
+DEF = 5
+VIT = 5
+AGI = 5
+DEX = 5
+LUCK = 5
+
+INITIAL PLAYER INFO
+
+HP = 110
+Damage = 25
+Defence = 5
+Armor = 0
+Attack Speed = 1.05
+Dodge Chance = 1.25%
+Hit Rating = 100%
+Critical Chance = 0.75%
+Critical Damage = 0%
+Armor Penetration = 0%
+
+BASE STAT SCALING
+
++1 ATK
+= +5 Damage
+
++1 DEF
+= +1 Defence
+
++1 VIT
+= +20 HP
+
++1 AGI
+= +1% Attack Speed
+= +0.25% Dodge Chance
+
++1 DEX
+= +0.05% Hit Rating
+
++1 LUCK
+= +0.15% Critical Chance
+
+FORMULAS
+
+HP
+= (Level × 10) + (VIT × 20)
+
+Damage
+= ATK × 5
+
+Armor
+= Total Armor From Equipment
+
+Defence
+= DEF + Armor
+
+Attack Speed
+= 1 + (AGI × 0.01)
+
+Dodge Chance
+= AGI × 0.25%
+
+Hit Rating
+= 100% + ((DEX - 5) × 0.05%)
+
+Critical Chance
+= LUCK × 0.15%
+
+Critical Damage
+= Equipment Only
+
+Armor Penetration
+= Equipment Only
+
+DAMAGE REDUCTION MODEL (IMPORTANT ADDITION)
+DEFENCE RULE (CLARIFIED)
+
+Defence reduces damage AFTER armor penetration:
+
+Final Reduction:
+= Effective Defence
+
+Effect:
+
+1 Defence = 1 flat damage reduction
+Cannot reduce below 0
+
+ATTACK SPEED RULE
+
+Attack Speed is a multiplier.
+
+1.00 = Normal Speed
+2.00 = 200% Speed
+3.00 = 300% Speed
+
+Max Attack Speed = 3.00
+
+LEVEL UP REWARDS
+
++3 Stat Allocation Points per level
+
+Level Cap = 100
+
+Total Allocation Points:
+= 99 × 3 = 297
+
+STAT ALLOCATION
+
+Players can allocate freely:
+
+ATK
+DEF
+VIT
+AGI
+DEX
+LUCK
+
+BASE STAT CAP
+
+Each base stat max = 100
+
+ATK / DEF / VIT / AGI / DEX / LUCK ≤ 100
+
+GLOBAL LIMITS
+
+Dodge Chance max = 100%
+Crit Chance max = 100%
+Armor Pen max = 100%
+Attack Speed max = 3.00
+Hit Chance min = 0%
+Hit Chance max = 100%
+
+HIT RULE
+
+Final Hit Chance
+= Hit Rating - Target Dodge Chance
+
+Clamp:
+
+min 0%
+max 100%
+
+Hit occurs if:
+Random ≤ Final Hit Chance
+
+ARMOR PENETRATION RULE
+
+Effective Defence
+= Defence × (1 - Armor Penetration)
+
+If < 0 → 0
+
+CRITICAL HIT RULE (BALANCED FIX)
+
+Critical Chance determines proc.
+
+Critical Damage comes from equipment ONLY.
+
+BUT scaling interaction:
+
+Critical Hit Damage
+= Damage + (Damage × Critical Damage%)
+
+DAMAGE CALCULATION ORDER
+Calculate Hit Chance
+Roll Hit / Miss
+Calculate Effective Defence
+Check Crit
+Calculate Final Damage
+FINAL DAMAGE FORMULA
+
+MISS:
+= 0
+
+NORMAL:
+= Damage - Effective Defence
+
+CRIT:
+= (Damage + Crit Bonus) - Effective Defence
+
+Minimum Damage:
+= 1
+
+STAT ROLE DESIGN (BALANCE CORE)
+
+ATK
+Linear DPS scaling (main damage source)
+
+DEF
+Early–mid game survivability (flat tanking)
+
+VIT
+Pure survivability (HP scaling)
+
+AGI
+Hybrid:
+
+Attack speed scaling (consistent DPS increase)
+Dodge scaling (defensive evasion, capped effectiveness)
+
+DEX
+Accuracy scaling (anti-dodge counter)
+
+LUCK
+Crit chance scaler (burst damage enabler)
+
+BALANCE SAFETY RULES (IMPORTANT)
+
+No stat is fully self-sufficient
+Dodge is countered by DEX
+Crit is countered by DEF + HP scaling
+Tank is countered by ATK scaling
+AGI is balanced between offense + defense hybrid
+
+STAT RESET RULE
+
+Reset returns all allocated stats:
+
+ATK = 5
+DEF = 5
+VIT = 5
+AGI = 5
+DEX = 5
+LUCK = 5
+
+Equipment unaffected
+
+PvE / PvP RULE
+
+Same formulas used for both modes
+No hidden modifier
+
+SIMULATION READY STATUS
+
+✔ No conflicting formulas
+✔ No undefined stat source
+✔ All stats have scaling role
+✔ All combat steps deterministic
+✔ Ready for DPS simulation engine
+✔ Ready for multiplayer server logic
+
+⚠ DESIGN NOTES (IMPORTANT FOR YOU)
+
+Ini bukan error, tapi hasil audit balance:
+
+Tank masih “flat survivability”
+Crit masih item-heavy (belum stat-heavy)
+AGI sudah balanced (tidak OP, tapi usable)
+DEX sangat penting sebagai counter meta
+
+🧠 DESIGN TRAITS (ADDED)
+
+AGI = hybrid scaling stat (offense + defense) dengan dual contribution: attack speed + dodge scaling, membuatnya memiliki fleksibilitas tinggi di berbagai situasi combat
+
+DEF = early–mid game survivability stat berbasis flat reduction, kuat di early game tetapi mengalami diminishing impact terhadap damage scaling tinggi di late game
+
+DEX = counter-evasion stat yang berfungsi sebagai anti-AGI mechanic melalui peningkatan hit consistency dan pengurangan efektivitas dodge build
+
+ATK = pure DPS linear stat yang menjadi sumber damage utama tanpa mekanik tambahan, sehingga scaling-nya bersifat langsung dan konsisten
+
+⚠ IMPACT WARNING (ADDED)
+
+AGI → high flexibility stat dengan potensi dominasi meta jika dikombinasikan dengan equipment berbasis attack speed atau additional scaling multiplier
+
+DEF → berpotensi kehilangan relevansi di late game apabila tidak dipasangkan dengan mekanik % reduction atau scaling mitigation tambahan dari equipment
+
+DODGE → harus tetap dalam kontrol sistem (cap + counter DEX) untuk mencegah gameplay yang terlalu bergantung pada RNG evasion yang tidak konsisten
+
+CRIT SYSTEM → berpotensi menjadi item-dominant jika tidak ada tambahan scaling dari stat LUCK atau mekanik hybrid damage scaling di future expansion

@@ -1,0 +1,70 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
+
+-- HUBUNGKAN JALUR BARU KE FORMULA ENGINE
+local ModulesFolder = ReplicatedStorage:WaitForChild("Modules")
+local StatsFolder = ModulesFolder:WaitForChild("Stats")
+local FormulaEngine = require(StatsFolder:WaitForChild("FormulaEngine"))
+
+local HitSystem = {}
+
+local MissStreaks = {}
+
+local function getEntityId(entity)
+	if typeof(entity) == "Instance" then
+		if entity:IsA("Player") then
+			return "P_" .. tostring(entity.UserId)
+		else
+			return "E_" .. entity:GetDebugId()
+		end
+	elseif type(entity) == "string" then
+		return entity
+	end
+	return tostring(entity)
+end
+
+function HitSystem.CalculateHitChance(attackerHitRating, targetDodgeChance)
+	return FormulaEngine.CalculateFinalHitChance(attackerHitRating, targetDodgeChance)
+end
+
+function HitSystem.RollHit(attacker, target, attackerHitRating, targetDodgeChance)
+	local attackerId = getEntityId(attacker)
+	local targetId = getEntityId(target)
+
+	local finalHitChance = HitSystem.CalculateHitChance(attackerHitRating, targetDodgeChance)
+
+	if not MissStreaks[attackerId] then
+		MissStreaks[attackerId] = {}
+	end
+
+	local currentStreak = MissStreaks[attackerId][targetId] or 0
+
+	-- Aturan Anti-Streak Evasion v1.2
+	if currentStreak >= PlayerStatsConfig.DODGE_ANTI_STREAK_LIMIT then
+		MissStreaks[attackerId][targetId] = 0
+		return true, finalHitChance, true
+	end
+
+	local roll = math.random()
+	local isHit = roll <= finalHitChance
+
+	if isHit then
+		MissStreaks[attackerId][targetId] = 0
+	else
+		MissStreaks[attackerId][targetId] = currentStreak + 1
+	end
+
+	return isHit, finalHitChance, false
+end
+
+function HitSystem.ClearTracking(entity)
+	local entityId = getEntityId(entity)
+
+	MissStreaks[entityId] = nil
+
+	for attackerId, targetTable in pairs(MissStreaks) do
+		targetTable[entityId] = nil
+	end
+end
+
+return HitSystem

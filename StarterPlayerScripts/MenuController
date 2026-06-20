@@ -1,0 +1,37 @@
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local PlayerScripts = player:WaitForChild("PlayerScripts")
+
+local HelperFolder = PlayerScripts:WaitForChild("Helper")
+local UIHelper = require(HelperFolder:WaitForChild("UIHelper"))
+
+local NavMenu = playerGui:WaitForChild("NavMenu", 10)
+local CharacterUI = playerGui:WaitForChild("CharacterUI", 10)
+
+if not NavMenu or not CharacterUI then
+	warn("[RPG WARNING] ScreenGuis tidak lengkap!")
+	return
+end
+
+UIHelper.RegisterWindow(NavMenu)
+UIHelper.RegisterWindow(CharacterUI)
+
+local RightMenu = NavMenu:WaitForChild("RightMenu", 5)
+local CharacterStatBtn = RightMenu and RightMenu:WaitForChild("CharacterStatBtn", 5)
+local StatPanel = CharacterUI:WaitForChild("StatPanel", 5)
+
+if not CharacterStatBtn or not StatPanel then
+	warn("[RPG WARNING] Tombol CharacterStatBtn atau StatPanel tidak terdeteksi!")
+	return
+end
+
+CharacterStatBtn.MouseButton1Click:Connect(function()
+	local isVisible = not StatPanel.Visible
+	StatPanel.Visible = isVisible
+
+	if isVisible then
+		UIHelper.BringToFront(CharacterUI)
+	end
+end)

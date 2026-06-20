@@ -1,0 +1,28 @@
+local Theme = {}
+
+-- Pengaturan Font Terpusat
+Theme.FontBold = Enum.Font.GothamBold
+Theme.FontRegular = Enum.Font.GothamMedium
+
+-- Palet Warna Terpusat (Tema Gelap Profesional)
+Theme.Colors = {
+	Background = Color3.fromRGB(25, 25, 25),
+	Header = Color3.fromRGB(15, 15, 15),
+	RowBg = Color3.fromRGB(35, 35, 35),
+	RowBgMuted = Color3.fromRGB(18, 18, 18),
+	TabBarBg = Color3.fromRGB(15, 15, 15),
+
+	TextLight = Color3.fromRGB(255, 255, 255),
+	TextMuted = Color3.fromRGB(180, 180, 180),
+	TextDark = Color3.fromRGB(150, 150, 150),
+
+	Success = Color3.fromRGB(60, 130, 60),
+	Danger = Color3.fromRGB(210, 50, 50),
+	PointGreen = Color3.fromRGB(110, 220, 110)
+}
+
+-- Pengaturan Lengkungan Sudut (UICorner)
+Theme.CornerRadius = 8
+Theme.RowCornerRadius = 4
+
+return Theme

@@ -1,0 +1,116 @@
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+
+local UIHelper = {}
+
+local currentHighestOrder = 50
+local managedGuis = {}
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+function UIHelper.BringToFront(screenGui)
+	if not screenGui or not screenGui:IsA("ScreenGui") then return end
+	currentHighestOrder = currentHighestOrder + 1
+	screenGui.DisplayOrder = currentHighestOrder
+end
+
+function UIHelper.RegisterWindow(screenGui)
+	if not screenGui or not screenGui:IsA("ScreenGui") then return end
+	managedGuis[screenGui] = true
+	UIHelper.BringToFront(screenGui)
+end
+
+UserInputService.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		local pos = UserInputService:GetMouseLocation()
+		local objects = playerGui:GetGuiObjectsAtPosition(pos.X, pos.Y)
+
+		for _, obj in ipairs(objects) do
+			local parentGui = obj:FindFirstAncestorOfClass("ScreenGui")
+			if parentGui and managedGuis[parentGui] then
+				UIHelper.BringToFront(parentGui)
+				break
+			end
+		end
+	end
+end)
+
+function UIHelper.MakeDraggable(frame, handle)
+	handle = handle or frame
+
+	local dragging = false
+	local dragInput
+	local mouseStartPos
+	local frameStartUDim
+
+	local function update(input)
+		local delta = input.Position - mouseStartPos
+		local viewportSize = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(0, 0)
+
+		local targetXOffset = frameStartUDim.X.Offset + delta.X
+		local targetYOffset = frameStartUDim.Y.Offset + delta.Y
+
+		local currentAbsX = (viewportSize.X * frameStartUDim.X.Scale) + targetXOffset
+		local currentAbsY = (viewportSize.Y * frameStartUDim.Y.Scale) + targetYOffset
+
+		local maxX = math.max(0, viewportSize.X - frame.AbsoluteSize.X)
+		local maxY = math.max(0, viewportSize.Y - frame.AbsoluteSize.Y)
+
+		local clampedAbsX = math.clamp(currentAbsX, 0, maxX)
+		local clampedAbsY = math.clamp(currentAbsY, 0, maxY)
+
+		local finalXOffset = clampedAbsX - (viewportSize.X * frameStartUDim.X.Scale)
+		local finalYOffset = clampedAbsY - (viewportSize.Y * frameStartUDim.Y.Scale)
+
+		local targetPos = UDim2.new(frameStartUDim.X.Scale, finalXOffset, frameStartUDim.Y.Scale, finalYOffset)
+		local tweenInfo = TweenInfo.new(0.07, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		TweenService:Create(frame, tweenInfo, {Position = targetPos}):Play()
+	end
+
+	handle.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+
+			local mousePos = UserInputService:GetMouseLocation()
+			local objectsUnderMouse = playerGui:GetGuiObjectsAtPosition(mousePos.X, mousePos.Y)
+			local topGui = nil
+
+			for _, obj in ipairs(objectsUnderMouse) do
+				local parentGui = obj:FindFirstAncestorOfClass("ScreenGui")
+				if parentGui and managedGuis[parentGui] then
+					topGui = parentGui
+					break
+				end
+			end
+
+			local myGui = frame:FindFirstAncestorOfClass("ScreenGui")
+			if topGui ~= myGui then
+				return
+			end
+
+			dragging = true
+			mouseStartPos = input.Position
+			frameStartUDim = frame.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	handle.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			update(input)
+		end
+	end)
+end
+
+return UIHelper

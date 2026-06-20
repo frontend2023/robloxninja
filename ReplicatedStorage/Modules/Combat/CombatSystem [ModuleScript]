@@ -1,0 +1,58 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- HUBUNGKAN KE SUB-SISTEM SISI DALAM FOLDER COMBAT
+local ModulesFolder = ReplicatedStorage:WaitForChild("Modules")
+local CombatFolder = ModulesFolder:WaitForChild("Combat")
+
+local HitSystem = require(CombatFolder:WaitForChild("HitSystem"))
+local CritSystem = require(CombatFolder:WaitForChild("CritSystem"))
+local DamageCalculator = require(CombatFolder:WaitForChild("DamageCalculator"))
+
+local CombatSystem = {}
+
+function CombatSystem.ResolveAttack(attackerEntity, targetEntity, attackerStats, targetStats)
+	local result = {
+		ResultType = "MISS",
+		Damage = 0,
+		FinalHitChance = 0,
+		IsGuaranteedHit = false
+	}
+
+	local attackerDerived = attackerStats.DerivedStats
+	local targetDerived = targetStats.DerivedStats
+
+	local isHit, hitChance, isGuaranteed = HitSystem.RollHit(
+		attackerEntity,
+		targetEntity,
+		attackerDerived.HitRating,
+		targetDerived.DodgeChance
+	)
+
+	result.FinalHitChance = hitChance
+	result.IsGuaranteedHit = isGuaranteed
+
+	if not isHit then
+		result.ResultType = "MISS"
+		result.Damage = 0
+		return result
+	end
+
+	local baseDamage = attackerDerived.Damage
+	local targetDefense = targetDerived.Defence
+
+	local isCrit = CritSystem.RollCrit(attackerDerived.CriticalChance)
+
+	local finalDamage = DamageCalculator.CalculateFinalDamage(
+		baseDamage,
+		targetDefense,
+		isCrit,
+		attackerDerived.CriticalDamage
+	)
+
+	result.ResultType = isCrit and "CRIT" or "HIT"
+	result.Damage = finalDamage
+
+	return result
+end
+
+return CombatSystem

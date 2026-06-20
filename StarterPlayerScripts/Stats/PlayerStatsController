@@ -1,0 +1,188 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local PlayerScripts = player:WaitForChild("PlayerScripts")
+
+local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
+local StatsFolder = PlayerScripts:WaitForChild("Stats")
+local PlayerStatsGui = require(StatsFolder:WaitForChild("PlayerStatsGui"))
+
+local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
+local StatsRemotes = Remotes and Remotes:WaitForChild("Stats", 5)
+local StatUpdateEvent = StatsRemotes and StatsRemotes:WaitForChild("StatUpdateEvent", 5)
+local AllocateStatRequest = StatsRemotes and StatsRemotes:WaitForChild("AllocateStatRequest", 5)
+local ResetStatsRequest = StatsRemotes and StatsRemotes:WaitForChild("ResetStatsRequest", 5)
+
+if not StatUpdateEvent or not AllocateStatRequest or not ResetStatsRequest then
+	error("[RPG ERROR] RemoteEvent status tidak lengkap!")
+end
+
+local DERIVED_STATS_LAYOUT = {
+	{Key = "MaxHP", Label = "Max HP", IsPercent = false, Color = Color3.fromRGB(240, 90, 90)},
+	{Key = "Damage", Label = "Base Damage", IsPercent = false, Color = Color3.fromRGB(240, 180, 80)},
+	{Key = "Defence", Label = "Defence (DEF+Armor)", IsPercent = false, Color = Color3.fromRGB(80, 180, 240)},
+	{Key = "AttackSpeed", Label = "Attack Speed (ASPD)", IsPercent = false, Color = Color3.fromRGB(80, 220, 150)},
+	{Key = "DodgeChance", Label = "Dodge Chance", IsPercent = true, Color = Color3.fromRGB(240, 220, 80)},
+	{Key = "HitRating", Label = "Hit Rating", IsPercent = true, Color = Color3.fromRGB(240, 220, 80)},
+	{Key = "CriticalChance", Label = "Critical Chance", IsPercent = true, Color = Color3.fromRGB(240, 220, 80)},
+	{Key = "CriticalDamage", Label = "Critical Damage", IsPercent = true, Color = Color3.fromRGB(240, 220, 80)},
+	{Key = "ArmorPenetration", Label = "Armor Penetration", IsPercent = true, Color = Color3.fromRGB(240, 220, 80)}
+}
+local baseStatNames = {"ATK", "DEF", "VIT", "AGI", "DEX", "LUCK"}
+
+local function getOrCreateScreenGui(name)
+	local gui = playerGui:FindFirstChild(name)
+	if not gui then
+		gui = Instance.new("ScreenGui")
+		gui.Name = name
+		gui.ResetOnSpawn = false
+		gui.IgnoreGuiInset = true
+		gui.Parent = playerGui
+	end
+	return gui
+end
+
+local CharacterUI = getOrCreateScreenGui("CharacterUI")
+local ui = PlayerStatsGui.Create(CharacterUI, DERIVED_STATS_LAYOUT, baseStatNames)
+
+local serverData = nil
+local pendingAllocations = {ATK = 0, DEF = 0, VIT = 0, AGI = 0, DEX = 0, LUCK = 0}
+local equipmentBonuses = {ATK = 0, DEF = 0, VIT = 0, AGI = 0, DEX = 0, LUCK = 0}
+local virtualPoints = 0
+
+local function selectTab(tabType)
+	if tabType == "BASE" then
+		ui.BaseStatsFrame.Visible = true
+		ui.StatsInfoFrame.Visible = false
+		ui.BaseTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		ui.InfoTabBtn.TextColor3 = Color3.fromRGB(130, 130, 130)
+		TweenService:Create(ui.ActiveIndicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Position = UDim2.new(0, 0, 1, -2)
+		}):Play()
+	else
+		ui.BaseStatsFrame.Visible = false
+		ui.StatsInfoFrame.Visible = true
+		ui.BaseTabBtn.TextColor3 = Color3.fromRGB(130, 130, 130)
+		ui.InfoTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		TweenService:Create(ui.ActiveIndicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Position = UDim2.new(0.5, 0, 1, -2)
+		}):Play()
+	end
+end
+
+ui.BaseTabBtn.MouseButton1Click:Connect(function() selectTab("BASE") end)
+ui.InfoTabBtn.MouseButton1Click:Connect(function() selectTab("INFO") end)
+
+ui.CloseBtn.MouseButton1Click:Connect(function()
+	ui.StatPanel.Visible = false
+end)
+
+local function formatValue(val, isPercent)
+	if isPercent then
+		return string.format("%.2f%%", val * 100)
+	else
+		if type(val) == "number" then
+			return (val % 1 ~= 0) and string.format("%.2f", val) or tostring(math.round(val))
+		end
+		return tostring(val)
+	end
+end
+
+local function updateVisuals()
+	if not serverData then return end
+
+	ui.LevelLabel.Text = "Level: " .. tostring(serverData.Level)
+	ui.PointsLabel.Text = "Points: " .. tostring(virtualPoints)
+
+	local hasAnyPending = false
+
+	for stat, row in pairs(ui.StatRows) do
+		local baseVal = serverData.BaseStats[stat] or 5
+		local pendingVal = pendingAllocations[stat] or 0
+		local bonusVal = equipmentBonuses[stat] or 0
+
+		local displayText = stat .. ": " .. tostring(baseVal + pendingVal)
+		if bonusVal > 0 then
+			displayText = displayText .. " (+" .. tostring(bonusVal) .. ")"
+		end
+		row.Label.Text = displayText
+
+		row.PlusButton.Visible = (virtualPoints > 0 and (baseVal + pendingVal) < PlayerStatsConfig.STAT_CAP)
+		row.MinusButton.Visible = (pendingVal > 0)
+
+		if pendingVal > 0 then
+			hasAnyPending = true
+		end
+	end
+
+	ui.ApplyBtn.Visible = hasAnyPending
+
+	for key, row in pairs(ui.InfoRows) do
+		local val = serverData.DerivedStats[key] or 0
+		if key == "MaxHP" then
+			row.ValueLabel.Text = tostring(val)
+		else
+			row.ValueLabel.Text = formatValue(val, row.Config.IsPercent)
+		end
+	end
+end
+
+for stat, row in pairs(ui.StatRows) do
+	row.PlusButton.MouseButton1Click:Connect(function()
+		if not serverData then return end
+		local baseVal = serverData.BaseStats[stat] or 5
+		local pendingVal = pendingAllocations[stat] or 0
+
+		if virtualPoints > 0 and (baseVal + pendingVal) < PlayerStatsConfig.STAT_CAP then
+			pendingAllocations[stat] = pendingVal + 1
+			virtualPoints = virtualPoints - 1
+			updateVisuals()
+		end
+	end)
+
+	row.MinusButton.MouseButton1Click:Connect(function()
+		local pendingVal = pendingAllocations[stat] or 0
+		if pendingVal > 0 then
+			pendingAllocations[stat] = pendingVal - 1
+			virtualPoints = virtualPoints + 1
+			updateVisuals()
+		end
+	end)
+end
+
+ui.ApplyBtn.MouseButton1Click:Connect(function()
+	local applyData = {}
+	local hasData = false
+	for stat, val in pairs(pendingAllocations) do
+		if val > 0 then
+			applyData[stat] = val
+			hasData = true
+		end
+	end
+
+	if hasData then
+		AllocateStatRequest:FireServer(applyData)
+		for stat, _ in pairs(pendingAllocations) do
+			pendingAllocations[stat] = 0
+		end
+	end
+end)
+
+ui.ResetBtn.MouseButton1Click:Connect(function()
+	ResetStatsRequest:FireServer()
+	for stat, _ in pairs(pendingAllocations) do
+		pendingAllocations[stat] = 0
+	end
+end)
+
+StatUpdateEvent.OnClientEvent:Connect(function(data)
+	serverData = data
+	virtualPoints = data.Points
+	for stat, _ in pairs(pendingAllocations) do
+		pendingAllocations[stat] = 0
+	end
+	updateVisuals()
+end)

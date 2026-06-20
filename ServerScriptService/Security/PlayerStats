@@ -1,0 +1,40 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
+
+local PlayerStatsSecurity = {}
+
+function PlayerStatsSecurity.ValidateAllocation(playerData, batchAllocations)
+	if not playerData then 
+		return false, "Data pemain tidak terdeteksi" 
+	end
+	if type(batchAllocations) ~= "table" then
+		return false, "Format transaksi alokasi tidak valid"
+	end
+
+	local totalRequiredPoints = 0
+
+	for statName, amount in pairs(batchAllocations) do
+		if type(amount) ~= "number" or amount < 0 then
+			return false, "Jumlah alokasi untuk " .. tostring(statName) .. " tidak valid"
+		end
+
+		local currentVal = playerData.BaseStats[statName]
+		if currentVal == nil then
+			return false, "Nama atribut tidak valid: " .. tostring(statName)
+		end
+
+		if currentVal + amount > PlayerStatsConfig.STAT_CAP then
+			return false, "Alokasi " .. statName .. " melebihi batas maksimal " .. tostring(PlayerStatsConfig.STAT_CAP)
+		end
+
+		totalRequiredPoints = totalRequiredPoints + amount
+	end
+
+	if totalRequiredPoints > playerData.Points then
+		return false, "Poin alokasi tidak mencukupi"
+	end
+
+	return true
+end
+
+return PlayerStatsSecurity

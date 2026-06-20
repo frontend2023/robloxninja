@@ -1,0 +1,73 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local PlayerScripts = player:WaitForChild("PlayerScripts")
+local HelperFolder = PlayerScripts:WaitForChild("Helper")
+local Theme = require(HelperFolder:WaitForChild("Theme"))
+
+local HealthBarGui = {}
+
+local function makeRoundedFrame(parent, name, size, pos, bgCol, radius)
+	local frame = Instance.new("Frame")
+	frame.Name = name
+	frame.Size = size
+	frame.Position = pos
+	frame.BackgroundColor3 = bgCol
+	frame.BorderSizePixel = 0
+	frame.Parent = parent
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, radius)
+	corner.Parent = frame
+	return frame
+end
+
+function HealthBarGui.Create(healthBarGui)
+	local hud = {}
+
+	hud.HUD_HP = makeRoundedFrame(healthBarGui, "HUD_HP", UDim2.new(0, 240, 0, 58), UDim2.new(1, -250, 0, 20), Theme.Colors.Header, Theme.CornerRadius)
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(45, 45, 45)
+	stroke.Thickness = 1
+	stroke.Parent = hud.HUD_HP
+
+	hud.NameLabel = Instance.new("TextLabel")
+	hud.NameLabel.Size = UDim2.new(0.65, 0, 0, 18)
+	hud.NameLabel.Position = UDim2.new(0, 10, 0, 8)
+	hud.NameLabel.BackgroundTransparency = 1
+	hud.NameLabel.Font = Theme.FontBold
+	hud.NameLabel.TextColor3 = Theme.Colors.TextLight
+	hud.NameLabel.TextSize = 11
+	hud.NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+	hud.NameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	hud.NameLabel.Text = player.DisplayName
+	hud.NameLabel.Parent = hud.HUD_HP
+
+	hud.LevelLabel = Instance.new("TextLabel")
+	hud.LevelLabel.Size = UDim2.new(0.3, 0, 0, 18)
+	hud.LevelLabel.Position = UDim2.new(0.7, -10, 0, 8)
+	hud.LevelLabel.BackgroundTransparency = 1
+	hud.LevelLabel.Font = Theme.FontBold
+	hud.LevelLabel.TextColor3 = Theme.Colors.PointGreen
+	hud.LevelLabel.TextSize = 11
+	hud.LevelLabel.TextXAlignment = Enum.TextXAlignment.Right
+	hud.LevelLabel.Text = "Lv. --"
+	hud.LevelLabel.Parent = hud.HUD_HP
+
+	local HPBarBG = makeRoundedFrame(hud.HUD_HP, "BarBG", UDim2.new(1, -20, 0, 16), UDim2.new(0, 10, 0, 30), Color3.fromRGB(50, 20, 20), Theme.RowCornerRadius)
+	hud.HPBarFill = makeRoundedFrame(HPBarBG, "BarFill", UDim2.new(1, 0, 1, 0), UDim2.new(0, 0, 0, 0), Theme.Colors.Danger, Theme.RowCornerRadius)
+
+	hud.HPText = Instance.new("TextLabel")
+	hud.HPText.Size = UDim2.new(1, 0, 1, 0)
+	hud.HPText.BackgroundTransparency = 1
+	hud.HPText.Font = Theme.FontBold
+	hud.HPText.TextColor3 = Theme.Colors.TextLight
+	hud.HPText.TextSize = 10
+	hud.HPText.Text = "HP: -- / --"
+	hud.HPText.ZIndex = 3
+	hud.HPText.Parent = HPBarBG
+
+	return hud
+end
+
+return HealthBarGui

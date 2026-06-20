@@ -1,0 +1,251 @@
+ini catatan struktur lama karna seiring waktu telah berubah
+
+🧩 ROBLOX RPG SYSTEM
+v1.1 → IMPLEMENTATION MAPPING (SCRIPT STRUCTURE)
+🧠 0. ARSITEKTUR BESAR (WAJIB PAHAM DULU)
+
+Sistem kamu dibagi jadi 4 layer:
+
+[ CLIENT ]
+   ↓ input / UI
+[ SERVER CONTROLLER ]
+   ↓ validate + process combat
+[ GAME CORE SYSTEM ]
+   ↓ stat + formula engine (v1.1)
+[ DATA / CHARACTER STATE ]
+   ↓ player stats + equipment + level
+
+📁 1. FOLDER STRUCTURE ROBLOX
+📦 ReplicatedStorage
+
+ReplicatedStorage
+│
+├── Modules
+│   ├── StatSystem
+│   ├── CombatSystem
+│   ├── FormulaEngine
+│   ├── DamageCalculator
+│   ├── HitSystem
+│   ├── CritSystem
+│   ├── DefenseSystem
+│   ├── EquipmentSystem
+│   └── Config
+│
+├── Remotes
+│   ├── AttackEvent
+│   ├── StatUpdateEvent
+│   ├── CombatResultEvent
+│
+└── SharedTypes (optional)
+
+
+🖥️ ServerScriptService
+ServerScriptService
+│
+├── ServerMain
+├── CombatController
+├── PlayerStatController
+├── EquipmentController
+├── LevelController
+└── DataService (save/load)
+
+🧍 StarterPlayerScripts (Client)
+StarterPlayerScripts
+│
+├── InputController
+├── CombatClient
+├── UIController
+└── StatDisplay
+
+🧠 2. CORE MODULE MAPPING (v1.1 → SCRIPT)
+📊 2.1 STAT SYSTEM → StatSystem Module
+🎯 Tugas:
+
+Mengelola:
+
+base stats
+allocation points
+caps
+reset system
+📦 Functions:
+GetBaseStats(player)
+ApplyStatPoint(player, statType, amount)
+ResetStats(player)
+GetDerivedStats(player)
+ValidateStatCap(player)
+⚔️ 2.2 COMBAT SYSTEM → CombatSystem Module
+🎯 Tugas:
+
+Orchestrator semua combat flow
+
+Urutan v1.1 kamu:
+
+Hit → Defence → Crit → Damage
+📦 Functions:
+ProcessAttack(attacker, target)
+ResolveHit(attacker, target)
+ResolveCrit(attacker)
+CalculateFinalDamage(attacker, target)
+ApplyDamage(target, damage)
+🎲 2.3 HIT SYSTEM → HitSystem Module
+🎯 Logic dari v1.1:
+Final Hit Chance = Hit Rating - Dodge
+Clamp 0–100
+📦 Functions:
+CalculateHitChance(attacker, target)
+RollHit(chance)
+GetHitRating(player)
+GetDodgeChance(player)
+💥 2.4 DAMAGE ENGINE → DamageCalculator Module
+🎯 Logic:
+Damage = ATK × 5
+Final = Damage - Defence
+Min 1
+📦 Functions:
+GetBaseDamage(player)
+ApplyDefenseReduction(damage, target)
+CalculateMinimumDamage(damage)
+🛡️ 2.5 DEFENSE SYSTEM → DefenseSystem Module
+🎯 Logic:
+Effective Defence = DEF + Armor - Penetration
+📦 Functions:
+GetDefense(player)
+ApplyArmorPenetration(defense, pen)
+CalculateEffectiveDefense(target)
+💢 2.6 CRIT SYSTEM → CritSystem Module
+🎯 Logic:
+Crit Chance = LUCK × 0.15%
+Crit Damage = Equipment Only
+📦 Functions:
+CheckCrit(player)
+GetCritChance(player)
+ApplyCritMultiplier(damage, player)
+🧍 2.7 EQUIPMENT SYSTEM → EquipmentSystem Module
+🎯 Tugas:
+equip / unequip item
+apply stat bonus
+store passive effects
+📦 Functions:
+EquipItem(player, item)
+UnequipItem(player, slot)
+GetEquipmentStats(player)
+GetPassiveEffects(player)
+🔁 2.8 FORMULA ENGINE → FormulaEngine Module
+🎯 Tugas:
+
+Single source semua formula v1.1
+
+📦 Functions:
+CalculateHP(level, vit)
+CalculateAttackSpeed(agi)
+CalculateDodge(agi)
+CalculateHitRating(dex)
+CalculateCritChance(luck)
+
+👉 ini “jantung matematik sistem kamu”
+
+🎮 3. SERVER FLOW (PENTING BANGET)
+⚔️ Combat Flow di Server:
+Player clicks attack
+↓
+CombatController receives request
+↓
+HitSystem → check hit/miss
+↓
+DefenseSystem → calculate mitigation
+↓
+CritSystem → check crit
+↓
+DamageCalculator → final damage
+↓
+ApplyDamage to target
+↓
+Send result to client
+🧍 4. PLAYER DATA STRUCTURE
+📦 Player State (server memory)
+PlayerData = {
+    Level,
+    BaseStats = {ATK, DEF, VIT, AGI, DEX, LUCK},
+    DerivedStats = {},
+    Equipment = {},
+    HP,
+    CurrentHP,
+}
+📡 5. REMOTE EVENTS (CLIENT ↔ SERVER)
+🔌 AttackEvent
+
+Client → Server
+
+{targetId}
+🔌 CombatResultEvent
+
+Server → Client
+
+{damage, crit, miss}
+🔌 StatUpdateEvent
+
+Server → Client
+
+{updatedStats}
+🧠 6. CLIENT SIDE (SIMPLE)
+🎮 InputController
+detect click attack
+⚔️ CombatClient
+send attack request
+play animation result
+🖥️ UIController
+HP bar
+damage numbers
+⚖️ 7. IMPORTANT DESIGN RULE (FROM YOUR v1.1)
+🚫 CLIENT TIDAK BOLEH:
+hit calculation
+damage calculation
+crit calculation
+✔ SERVER HARUS:
+semua combat logic
+
+👉 ini penting untuk anti exploit
+
+🧾 FINAL MAPPING SUMMARY
+🧠 v1.1 STAT SYSTEM →
+
+✔ StatSystem
+✔ FormulaEngine
+
+⚔️ COMBAT FLOW →
+
+✔ CombatController
+✔ CombatSystem
+
+🎯 MECHANICS →
+
+✔ HitSystem
+✔ CritSystem
+✔ DefenseSystem
+✔ DamageCalculator
+
+🧍 PLAYER STATE →
+
+✔ PlayerStatController
+✔ DataService
+
+🎒 EQUIPMENT →
+
+✔ EquipmentSystem
+✔ EquipmentController
+
+🎮 CLIENT →
+
+✔ InputController
+✔ CombatClient
+✔ UIController
+
+🚀 HASIL AKHIR DESAIN INI
+
+Kalau kamu implement ini:
+
+✔ sistem kamu modular (mudah di-debug)
+✔ mudah balancing tanpa rewrite
+✔ siap multiplayer
+✔ anti exploit basic
+✔ siap scaling ke equipment system v1.2

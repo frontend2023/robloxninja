@@ -1,0 +1,189 @@
+🚀 ROBLOX RPG PLAYER STAT SYSTEM
+VERSION 1.2 ROADMAP BALANCING (NON-DESTRUCTIVE UPGRADE)
+🧠 PHILOSOPHY v1.2
+
+Sistem v1.1 kamu sudah bagus sebagai:
+
+“Stat identity + combat engine core”
+
+v1.2 fokusnya bukan mengubah itu, tapi:
+
+menjaga semua build tetap viable
+mengurangi extreme meta (tanpa nerf stat)
+menambah counter-play di equipment & scaling layer
+membuat PvP lebih “skill + build”, bukan RNG/stat abuse
+🧩 1. STAT SYSTEM (NO CHANGE)
+
+✔ ATK / DEF / VIT / AGI / DEX / LUCK
+✔ semua formula tetap
+✔ semua scaling tetap
+✔ semua caps tetap
+
+👉 v1.2 tidak menyentuh ini
+
+⚙️ 2. NEW LAYER: “COMBAT STABILITY LAYER”
+
+Ini inti v1.2.
+
+🔧 2.1 DAMAGE FLOOR CONTROL
+
+Tujuan:
+mencegah DEF build + armor stacking jadi terlalu swingy
+
+RULE ADDITION:
+Final Damage minimum = max(1, 3% of attacker Damage)
+
+👉 efek:
+
+tank tetap tanky
+tapi tidak “unkillable vs low ATK”
+🔧 2.2 DODGE CONSISTENCY LAYER
+
+Tujuan:
+hindari “RNG frustration”
+
+RULE ADDITION:
+After 3 consecutive misses on same target:
+Next hit guaranteed
+
+👉 efek:
+
+dodge tetap kuat
+tapi tidak bisa “infinite miss streak”
+🔧 2.3 HIT STABILITY BUFFER
+
+Tujuan:
+mengurangi extreme hit swing (DEX vs AGI)
+
+RULE ADDITION:
+Final Hit Chance cannot be reduced below 5%
+Final Hit Chance cannot exceed 95% (non-crit systems only)
+
+👉 efek:
+
+tidak ada “100% miss build”
+tidak ada “100% hit ignore dodge”
+🔧 2.4 CRIT CONTROL EXPANSION (NO STAT CHANGE)
+
+Tujuan:
+mengurangi item-only dependency
+
+RULE ADDITION:
+If Critical Damage = 0 (no gear),
+base fallback = +25% bonus damage
+
+👉 efek:
+
+LUCK tetap penting
+crit tidak “mati” tanpa gear
+🔧 2.5 DEFENSE SCALING SOFTENING (SYSTEMIC, NOT STAT CHANGE)
+
+Bukan nerf DEF, tapi smoothing impact:
+
+RULE ADDITION:
+Effective Defence has diminishing impact above 100 DEF:
+Damage reduction efficiency reduced by 50% after threshold
+
+👉 efek:
+
+tank tetap kuat
+tapi tidak “infinite wall scaling”
+⚖️ 3. EQUIPMENT SYSTEM GUIDELINES (NEW REQUIRED LAYER)
+
+Ini penting karena kamu bilang nanti ada equipment.
+
+🛡️ 3.1 EQUIPMENT ROLE LOCKING
+
+Equipment harus punya arah:
+
+DPS gear → ATK / Crit / ASPD
+Tank gear → HP / DEF / mitigation %
+Agility gear → ASPD / Dodge / Movement
+Utility gear → DEX / hybrid stats
+
+👉 ini mencegah “all stats stacking meta”
+
+🧱 3.2 ANTI-MONO BUILD RULE
+No single gear set can exceed:
++60% total effectiveness in one stat category
+
+👉 contoh:
+
+tidak bisa full AGI + dodge + speed + crit sekaligus
+⚔️ 3.3 COUNTER ITEMIZATION SYSTEM
+
+Tambahan wajib di equipment:
+
+Anti-Dodge stat (Accuracy Pierce)
+Anti-Tank stat (Armor Break scaling)
+Anti-Crit stat (Crit resistance optional future)
+Anti-Speed stat (slow / AS reduction)
+
+👉 ini yang bikin PvP kamu hidup
+
+🧪 4. META CONTROL LAYER (SIMULATION SAFE ZONE)
+🧠 4.1 BUILD DIVERSITY CHECK
+
+Sistem dianggap balanced jika:
+
+ATK build = viable
+Tank build = viable
+AGI build = viable
+Dodge build = situational viable
+Hybrid build = viable
+
+👉 tidak harus equal kuat
+👉 harus “usable semua”
+
+📊 4.2 DOMINANCE RULE
+
+Jika salah satu stat build:
+
+win rate > 65% di semua matchup
+
+maka:
+
+bukan nerf stat
+tapi nerf via equipment counter scaling
+🧬 5. FUTURE EXPANSION READY (v1.3 PREVIEW)
+
+Ini arah lanjut:
+
+🔮 5.1 STATUS EFFECT SYSTEM (optional)
+stun
+slow
+bleed
+armor break
+🔮 5.2 SKILL MODIFIER LAYER
+skill scaling dari ATK + AGI + LUCK hybrid
+🔮 5.3 PVP RANK BALANCING LAYER
+matchmaking berdasarkan stat weight score
+🧾 FINAL RESULT v1.2
+✔ yang tetap sama:
+semua stat formula
+semua scaling dasar
+semua caps
+semua core combat system
+➕ yang ditambah:
+damage floor control
+dodge anti-streak system
+hit stability buffer
+crit fallback system
+DEF soft diminishing layer
+equipment role locking
+anti mono-build system
+counter-itemization framework
+🎯 REAL IMPACT v1.2
+sebelum:
+AGI dominan fleksibel
+DEF kuat early tapi drop late
+dodge bisa RNG frustrasi
+sesudah:
+semua build tetap viable
+tidak ada “infinite abuse loop”
+PvP lebih skill + build interaction
+equipment jadi kunci balance (bukan stat nerf)
+🚀 KESIMPULAN
+
+👉 v1.2 ini bukan “rebalance stat”
+👉 tapi “stabilization + anti-meta abuse layer”

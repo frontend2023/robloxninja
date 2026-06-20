@@ -1,0 +1,154 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local PlayerScripts = player:WaitForChild("PlayerScripts")
+local HelperFolder = PlayerScripts:WaitForChild("Helper")
+local UIHelper = require(HelperFolder:WaitForChild("UIHelper"))
+local Theme = require(HelperFolder:WaitForChild("Theme"))
+local AdminFolder = PlayerScripts:WaitForChild("Admin")
+local AdminGui = require(AdminFolder:WaitForChild("AdminGui"))
+
+local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
+local AdminRemotes = Remotes and Remotes:WaitForChild("Admin", 5)
+local AdminOpsEvent = AdminRemotes and AdminRemotes:WaitForChild("AdminOpsEvent", 5)
+
+if not AdminOpsEvent then return end
+
+local NavMenu = playerGui:WaitForChild("NavMenu", 10)
+local LeftMenu = NavMenu:WaitForChild("LeftMenu", 5)
+local AdminBtn = LeftMenu and LeftMenu:WaitForChild("AdminBtn", 5)
+
+local AdminUI = Instance.new("ScreenGui")
+AdminUI.Name = "AdminUI"
+AdminUI.ResetOnSpawn = false
+AdminUI.IgnoreGuiInset = true
+AdminUI.Parent = playerGui
+
+UIHelper.RegisterWindow(AdminUI)
+local ui = AdminGui.Create(AdminUI)
+
+local lockedTargetUserId = nil
+local lockedTargetName = "None"
+local searchResult = nil
+local pendingResetType = nil
+local activeSecurityToken = nil
+
+local function showNotification(text, isError)
+	ui.NotificationLabel.Text = text
+	ui.NotificationLabel.TextColor3 = isError and Theme.Colors.Danger or Theme.Colors.PointGreen
+end
+
+local function closeConfirm()
+	ui.ConfirmPanel.Visible = false
+	ui.ConfirmInput.Text = ""
+	pendingResetType = nil
+	activeSecurityToken = nil
+end
+
+closeConfirm()
+
+AdminBtn.MouseButton1Click:Connect(function()
+	ui.AdminPanel.Visible = not ui.AdminPanel.Visible
+	if ui.AdminPanel.Visible then 
+		UIHelper.BringToFront(AdminUI) 
+		closeConfirm()
+	end
+end)
+
+ui.CloseBtn.MouseButton1Click:Connect(function()
+	ui.AdminPanel.Visible = false
+	closeConfirm()
+end)
+
+local function selectTab(tabType)
+	local isPlayer = (tabType == "PLAYER")
+	ui.PlayerTabFrame.Visible = isPlayer
+	ui.DatabaseTabFrame.Visible = not isPlayer
+	ui.PlayerTabBtn.TextColor3 = isPlayer and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(130, 130, 130)
+	ui.DatabaseTabBtn.TextColor3 = not isPlayer and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(130, 130, 130)
+	TweenService:Create(ui.ActiveIndicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Position = UDim2.new(isPlayer and 0 or 0.5, 0, 1, -2)
+	}):Play()
+end
+
+ui.PlayerTabBtn.MouseButton1Click:Connect(function() selectTab("PLAYER") end)
+ui.DatabaseTabBtn.MouseButton1Click:Connect(function() selectTab("DATABASE") end)
+
+ui.SearchBtn.MouseButton1Click:Connect(function()
+	if ui.SearchBox.Text ~= "" then AdminOpsEvent:FireServer("OP_S_77", ui.SearchBox.Text) end
+end)
+
+ui.LockBtn.MouseButton1Click:Connect(function()
+	if ui.LockBtn.Text == "LOCK" then
+		if searchResult then
+			lockedTargetUserId = searchResult.UserId
+			lockedTargetName = searchResult.Name
+			ui.TargetLabel.Text = "Locked Target: " .. lockedTargetName .. " (Lv. " .. tostring(searchResult.Level) .. ")"
+			ui.TargetLabel.TextColor3 = Theme.Colors.PointGreen
+			ui.LockBtn.Text = "UNLOCK"
+			ui.LockBtn.BackgroundColor3 = Theme.Colors.Danger
+		end
+	else
+		lockedTargetUserId = nil
+		ui.TargetLabel.Text = "Locked Target: None"
+		ui.TargetLabel.TextColor3 = Theme.Colors.TextDark
+		ui.LockBtn.Text = "LOCK"
+		ui.LockBtn.BackgroundColor3 = Theme.Colors.RowBg
+	end
+end)
+
+ui.LevelBtn.MouseButton1Click:Connect(function()
+	if lockedTargetUserId then AdminOpsEvent:FireServer("OP_L_88", {UserId = lockedTargetUserId, Amount = tonumber(ui.LevelInput.Text) or 1}) end
+end)
+
+ui.PointsBtn.MouseButton1Click:Connect(function()
+	if lockedTargetUserId then AdminOpsEvent:FireServer("OP_P_99", {UserId = lockedTargetUserId, Amount = tonumber(ui.PointsInput.Text) or 0}) end
+end)
+
+ui.ResetPlayerBtn.MouseButton1Click:Connect(function()
+	if lockedTargetUserId then
+		pendingResetType = "SINGLE"
+		AdminOpsEvent:FireServer("OP_RT_55")
+	end
+end)
+
+ui.ResetGlobalBtn.MouseButton1Click:Connect(function()
+	pendingResetType = "GLOBAL"
+	AdminOpsEvent:FireServer("OP_RT_55")
+end)
+
+ui.ConfirmCancelBtn.MouseButton1Click:Connect(closeConfirm)
+
+ui.ConfirmOkBtn.MouseButton1Click:Connect(function()
+	if ui.ConfirmInput.Text == "RESET" and activeSecurityToken then
+		local tokenToSend = activeSecurityToken
+		local resetType = pendingResetType
+		local targetId = lockedTargetUserId
+		closeConfirm()
+		if resetType == "SINGLE" then
+			AdminOpsEvent:FireServer("OP_RP_00", {TargetUserId = targetId, Token = tokenToSend})
+		elseif resetType == "GLOBAL" then
+			AdminOpsEvent:FireServer("OP_RG_11", {Token = tokenToSend})
+		end
+	else
+		showNotification("Verifikasi gagal atau kadaluwarsa!", true)
+		closeConfirm()
+	end
+end)
+
+AdminOpsEvent.OnClientEvent:Connect(function(success, message, returnData)
+	if message == "TOKEN_GRANTED" then
+		activeSecurityToken = returnData
+		ui.ConfirmPanel.Visible = true
+	elseif success and type(returnData) == "table" then
+		searchResult = returnData
+		ui.SearchBox.Text = returnData.Name
+		ui.TargetLabel.Text = "Locked Target: " .. returnData.Name .. " (Lv. " .. tostring(returnData.Level) .. ")"
+		showNotification(message)
+	else
+		showNotification(message, not success)
+	end
+end)

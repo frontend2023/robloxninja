@@ -1,0 +1,58 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local StarterGui = game:GetService("StarterGui")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local PlayerScripts = player:WaitForChild("PlayerScripts")
+
+local StatsFolder = PlayerScripts:WaitForChild("Stats")
+local HealthBarGui = require(StatsFolder:WaitForChild("HealthBarGui"))
+
+local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
+local StatsRemotes = Remotes and Remotes:WaitForChild("Stats", 5)
+local StatUpdateEvent = StatsRemotes and StatsRemotes:WaitForChild("StatUpdateEvent", 5)
+local HealthUpdateEvent = StatsRemotes and StatsRemotes:WaitForChild("HealthUpdateEvent", 5)
+
+if not StatUpdateEvent or not HealthUpdateEvent then
+	error("[RPG ERROR] RemoteEvent status tidak lengkap di ReplicatedStorage/Remotes/Stats!")
+end
+
+local function getOrCreateScreenGui(name)
+	local gui = playerGui:FindFirstChild(name)
+	if not gui then
+		gui = Instance.new("ScreenGui")
+		gui.Name = name
+		gui.ResetOnSpawn = false
+		gui.IgnoreGuiInset = true
+		gui.Parent = playerGui
+	end
+	return gui
+end
+
+local HealthBarGUI = getOrCreateScreenGui("HealthBarGUI")
+local hud = HealthBarGui.Create(HealthBarGUI)
+
+task.spawn(function()
+	local success = false
+	while not success do
+		success = pcall(function()
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, false)
+		end)
+		task.wait(0.1)
+	end
+end)
+
+HealthUpdateEvent.OnClientEvent:Connect(function(currentHP, maxHP)
+	hud.HPText.Text = "HP: " .. tostring(currentHP) .. " / " .. tostring(maxHP)
+
+	local ratio = math.clamp(currentHP / maxHP, 0, 1)
+	TweenService:Create(hud.HPBarFill, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Size = UDim2.new(ratio, 0, 1, 0)
+	}):Play()
+end)
+
+StatUpdateEvent.OnClientEvent:Connect(function(data)
+	hud.LevelLabel.Text = "Lv. " .. tostring(data.Level)
+end)

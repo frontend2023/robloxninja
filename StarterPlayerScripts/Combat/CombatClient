@@ -1,0 +1,95 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local Debris = game:GetService("Debris")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- MEMBACA REMOTES SECARA PASIF (Tanpa Membuat Otomatis)
+local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
+local CombatFolder = Remotes and Remotes:WaitForChild("Combat", 5)
+local AttackEvent = CombatFolder and CombatFolder:WaitForChild("AttackEvent", 5)
+local CombatResultEvent = CombatFolder and CombatFolder:WaitForChild("CombatResultEvent", 5)
+
+if not AttackEvent or not CombatResultEvent then
+	error("[RPG ERROR] RemoteEvent tempur tidak lengkap di ReplicatedStorage/Remotes/Combat!")
+end
+
+-- --- INPUT DETECTOR (Raycast Ke Karakter/NPC) ---
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		local mousePos = UserInputService:GetMouseLocation()
+		local ray = camera:ViewportPointToRay(mousePos.X, mousePos.Y)
+
+		local raycastParams = RaycastParams.new()
+		raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+		raycastParams.FilterDescendantsInstances = {player.Character}
+
+		local result = workspace:Raycast(ray.Origin, ray.Direction * 100, raycastParams)
+		if result and result.Instance then
+			local targetModel = result.Instance:FindFirstAncestorOfClass("Model")
+			if targetModel and targetModel:FindFirstChildOfClass("Humanoid") then
+				AttackEvent:FireServer(targetModel)
+			end
+		end
+	end
+end)
+
+-- --- VISUAL EFFECTS (Floating Damage Text Pop-Up) ---
+CombatResultEvent.OnClientEvent:Connect(function(data)
+	local resultType = data.ResultType
+	local damage = data.Damage
+	local targetInstance = data.TargetInstance
+
+	if not targetInstance then return end
+
+	local adornPart = targetInstance:FindFirstChild("Head") or targetInstance.PrimaryPart
+	if not adornPart then return end
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Size = UDim2.new(0, 150, 0, 45)
+	billboard.StudsOffset = Vector3.new(math.random(-2, 2), 2.5, math.random(-1, 1))
+	billboard.AlwaysOnTop = true
+	billboard.Adornee = adornPart
+	billboard.Parent = workspace
+
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Size = UDim2.new(1, 0, 1, 0)
+	textLabel.BackgroundTransparency = 1
+	textLabel.Font = Enum.Font.GothamBold
+	textLabel.TextScaled = true
+	textLabel.Parent = billboard
+
+	if resultType == "MISS" then
+		textLabel.Text = "Miss"
+		textLabel.TextColor3 = Color3.fromRGB(170, 170, 170)
+	elseif resultType == "CRIT" then
+		textLabel.Text = "💥 " .. tostring(damage) .. "!"
+		textLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
+	else
+		textLabel.Text = tostring(damage)
+		textLabel.TextColor3 = Color3.fromRGB(255, 225, 90)
+	end
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(0, 0, 0)
+	stroke.Thickness = 2
+	stroke.Parent = textLabel
+
+	local targetOffset = billboard.StudsOffset + Vector3.new(0, 2.5, 0)
+	local tweenInfo = TweenInfo.new(0.9, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+	local moveTween = TweenService:Create(billboard, tweenInfo, {StudsOffset = targetOffset})
+	local fadeTween = TweenService:Create(textLabel, tweenInfo, {TextTransparency = 1})
+	local strokeTween = TweenService:Create(stroke, tweenInfo, {Transparency = 1})
+
+	moveTween:Play()
+	fadeTween:Play()
+	strokeTween:Play()
+
+	Debris:AddItem(billboard, 1.1)
+end)

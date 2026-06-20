@@ -1,0 +1,44 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- KOREKSI JALUR: Mengarah ke PlayerStatsConfig tepercaya
+local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
+
+local ModulesFolder = ReplicatedStorage:WaitForChild("Modules")
+local StatsFolder = ModulesFolder:WaitForChild("Stats")
+local FormulaEngine = require(StatsFolder:WaitForChild("FormulaEngine"))
+
+local StatSystem = {}
+
+function StatSystem.GetDerivedStats(level, baseStats, equipmentStats)
+	level = level or 1
+	baseStats = baseStats or PlayerStatsConfig.INITIAL_STATS
+
+	equipmentStats = equipmentStats or {
+		Armor = 0,
+		CriticalDamage = 0.0,
+		ArmorPenetration = 0.0
+	}
+
+	local derived = {}
+
+	derived.MaxHP = FormulaEngine.CalculateHP(level, baseStats.VIT)
+	derived.Damage = FormulaEngine.CalculateDamage(baseStats.ATK)
+
+	derived.Defence = FormulaEngine.CalculateEffectiveDefense(
+		baseStats.DEF,
+		equipmentStats.Armor,
+		equipmentStats.ArmorPenetration
+	)
+
+	derived.AttackSpeed = FormulaEngine.CalculateAttackSpeed(baseStats.AGI)
+	derived.DodgeChance = FormulaEngine.CalculateDodge(baseStats.AGI)
+	derived.HitRating = FormulaEngine.CalculateHitRating(baseStats.DEX)
+	derived.CriticalChance = FormulaEngine.CalculateCritChance(baseStats.LUCK)
+
+	derived.CriticalDamage = equipmentStats.CriticalDamage or 0.0
+	derived.ArmorPenetration = equipmentStats.ArmorPenetration or 0.0
+	derived.Armor = equipmentStats.Armor or 0
+
+	return derived
+end
+
+return StatSystem

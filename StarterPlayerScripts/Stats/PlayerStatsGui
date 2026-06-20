@@ -1,0 +1,234 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local PlayerScripts = player:WaitForChild("PlayerScripts")
+local HelperFolder = PlayerScripts:WaitForChild("Helper")
+local Theme = require(HelperFolder:WaitForChild("Theme"))
+local UIHelper = require(HelperFolder:WaitForChild("UIHelper"))
+
+local PlayerStatsGui = {}
+
+local function makeRoundedFrame(parent, name, size, pos, bgCol, radius)
+	local frame = Instance.new("Frame")
+	frame.Name = name
+	frame.Size = size
+	frame.Position = pos
+	frame.BackgroundColor3 = bgCol
+	frame.BorderSizePixel = 0
+	frame.Parent = parent
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, radius)
+	corner.Parent = frame
+	return frame
+end
+
+function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
+	local ui = {}
+
+	ui.StatPanel = makeRoundedFrame(characterUi, "StatPanel", UDim2.new(0, 260, 0, 330), UDim2.new(0.5, -130, 0.5, -165), Theme.Colors.Background, Theme.CornerRadius)
+	ui.StatPanel.Visible = false
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(45, 45, 45)
+	stroke.Thickness = 1
+	stroke.Parent = ui.StatPanel
+
+	local PanelTitle = Instance.new("TextLabel")
+	PanelTitle.Size = UDim2.new(1, 0, 0, 35)
+	PanelTitle.BackgroundTransparency = 1
+	PanelTitle.Font = Theme.FontBold
+	PanelTitle.TextColor3 = Theme.Colors.TextLight
+	PanelTitle.TextSize = 13
+	PanelTitle.Text = "CHARACTER STATUS"
+	PanelTitle.Parent = ui.StatPanel
+
+	UIHelper.MakeDraggable(ui.StatPanel, PanelTitle)
+
+	ui.CloseBtn = Instance.new("TextButton")
+	ui.CloseBtn.Name = "CloseBtn"
+	ui.CloseBtn.Size = UDim2.new(0, 16, 0, 16)
+	ui.CloseBtn.Position = UDim2.new(1, -24, 0, 9)
+	ui.CloseBtn.BackgroundColor3 = Theme.Colors.Danger
+	ui.CloseBtn.Text = ""
+	ui.CloseBtn.Parent = ui.StatPanel
+
+	local closeCorner = Instance.new("UICorner")
+	closeCorner.CornerRadius = UDim.new(1, 0)
+	closeCorner.Parent = ui.CloseBtn
+
+	ui.LevelLabel = Instance.new("TextLabel")
+	ui.LevelLabel.Size = UDim2.new(0.5, -15, 0, 20)
+	ui.LevelLabel.Position = UDim2.new(0, 10, 0, 35)
+	ui.LevelLabel.BackgroundTransparency = 1
+	ui.LevelLabel.Font = Theme.FontRegular
+	ui.LevelLabel.TextColor3 = Theme.Colors.TextDark
+	ui.LevelLabel.TextSize = 11
+	ui.LevelLabel.TextXAlignment = Enum.TextXAlignment.Left
+	ui.LevelLabel.Text = "Level: --"
+	ui.LevelLabel.Parent = ui.StatPanel
+
+	ui.PointsLabel = Instance.new("TextLabel")
+	ui.PointsLabel.Size = UDim2.new(0.5, -10, 0, 20)
+	ui.PointsLabel.Position = UDim2.new(0.5, 5, 0, 35)
+	ui.PointsLabel.BackgroundTransparency = 1
+	ui.PointsLabel.Font = Theme.FontBold
+	ui.PointsLabel.TextColor3 = Theme.Colors.PointGreen
+	ui.PointsLabel.TextSize = 11
+	ui.PointsLabel.TextXAlignment = Enum.TextXAlignment.Right
+	ui.PointsLabel.Text = "Points: 0"
+	ui.PointsLabel.Parent = ui.StatPanel
+
+	local TabBar = makeRoundedFrame(ui.StatPanel, "TabBar", UDim2.new(1, -20, 0, 26), UDim2.new(0, 10, 0, 60), Theme.Colors.TabBarBg, Theme.RowCornerRadius)
+
+	ui.BaseTabBtn = Instance.new("TextButton")
+	ui.BaseTabBtn.Size = UDim2.new(0.5, 0, 1, 0)
+	ui.BaseTabBtn.BackgroundTransparency = 1
+	ui.BaseTabBtn.Font = Theme.FontBold
+	ui.BaseTabBtn.TextSize = 10
+	ui.BaseTabBtn.Text = "BASE STATS"
+	ui.BaseTabBtn.TextColor3 = Theme.Colors.TextLight
+	ui.BaseTabBtn.Parent = TabBar
+
+	ui.InfoTabBtn = Instance.new("TextButton")
+	ui.InfoTabBtn.Size = UDim2.new(0.5, 0, 1, 0)
+	ui.InfoTabBtn.Position = UDim2.new(0.5, 0, 0, 0)
+	ui.InfoTabBtn.BackgroundTransparency = 1
+	ui.InfoTabBtn.Font = Theme.FontBold
+	ui.InfoTabBtn.TextSize = 10
+	ui.InfoTabBtn.Text = "STATS INFO"
+	ui.InfoTabBtn.TextColor3 = Theme.Colors.TextMuted
+	ui.InfoTabBtn.Parent = TabBar
+
+	ui.ActiveIndicator = makeRoundedFrame(TabBar, "Indicator", UDim2.new(0.5, 0, 0, 2), UDim2.new(0, 0, 1, -2), Theme.Colors.PointGreen, 1)
+
+	ui.BaseStatsFrame = makeRoundedFrame(ui.StatPanel, "BaseStatsTab", UDim2.new(1, -20, 0, 195), UDim2.new(0, 10, 0, 92), Theme.Colors.Background, 0)
+	ui.StatsInfoFrame = makeRoundedFrame(ui.StatPanel, "StatsInfoTab", UDim2.new(1, -20, 0, 195), UDim2.new(0, 10, 0, 92), Theme.Colors.Background, 0)
+	ui.BaseStatsFrame.BackgroundTransparency = 1
+	ui.StatsInfoFrame.BackgroundTransparency = 1
+	ui.StatsInfoFrame.Visible = false
+
+	ui.ResetBtn = Instance.new("TextButton")
+	ui.ResetBtn.Size = UDim2.new(0.5, -15, 0, 26)
+	ui.ResetBtn.Position = UDim2.new(0, 10, 1, -34)
+	ui.ResetBtn.BackgroundColor3 = Theme.Colors.Danger
+	ui.ResetBtn.Font = Theme.FontBold
+	ui.ResetBtn.TextColor3 = Theme.Colors.TextLight
+	ui.ResetBtn.TextSize = 11
+	ui.ResetBtn.Text = "RESET STATUS"
+	ui.ResetBtn.Parent = ui.StatPanel
+
+	local resetCorner = Instance.new("UICorner")
+	resetCorner.CornerRadius = UDim.new(0, 6)
+	resetCorner.Parent = ui.ResetBtn
+
+	ui.ApplyBtn = Instance.new("TextButton")
+	ui.ApplyBtn.Size = UDim2.new(0.5, -10, 0, 26)
+	ui.ApplyBtn.Position = UDim2.new(0.5, 5, 1, -34)
+	ui.ApplyBtn.BackgroundColor3 = Theme.Colors.Success
+	ui.ApplyBtn.Font = Theme.FontBold
+	ui.ApplyBtn.TextColor3 = Theme.Colors.TextLight
+	ui.ApplyBtn.TextSize = 11
+	ui.ApplyBtn.Text = "APPLY"
+	ui.ApplyBtn.Visible = false
+	ui.ApplyBtn.Parent = ui.StatPanel
+
+	local applyCorner = Instance.new("UICorner")
+	applyCorner.CornerRadius = UDim.new(0, 6)
+	applyCorner.Parent = ui.ApplyBtn
+
+	ui.StatRows = {}
+	for i, stat in ipairs(baseStatNames) do
+		local yPos = (i - 1) * 29
+		local row = makeRoundedFrame(ui.BaseStatsFrame, "Row_" .. stat, UDim2.new(1, 0, 0, 25), UDim2.new(0, 0, 0, yPos), Theme.Colors.RowBg, Theme.RowCornerRadius)
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(0.6, 0, 1, 0)
+		label.Position = UDim2.new(0, 8, 0, 0)
+		label.BackgroundTransparency = 1
+		label.Font = Theme.FontRegular
+		label.TextColor3 = Theme.Colors.TextLight
+		label.TextSize = 11
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.Text = stat .. ": --"
+		label.Parent = row
+
+		local minusBtn = Instance.new("TextButton")
+		minusBtn.Size = UDim2.new(0, 20, 0, 20)
+		minusBtn.Position = UDim2.new(1, -44, 0.5, -10)
+		minusBtn.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
+		minusBtn.Font = Theme.FontBold
+		minusBtn.TextColor3 = Theme.Colors.TextLight
+		minusBtn.TextSize = 11
+		minusBtn.Text = "-"
+		minusBtn.Visible = false
+		minusBtn.Parent = row
+
+		local minusCorner = Instance.new("UICorner")
+		minusCorner.CornerRadius = UDim.new(0, 4)
+		minusCorner.Parent = minusBtn
+
+		local plusBtn = Instance.new("TextButton")
+		plusBtn.Size = UDim2.new(0, 20, 0, 20)
+		plusBtn.Position = UDim2.new(1, -22, 0.5, -10)
+		plusBtn.BackgroundColor3 = Theme.Colors.Success
+		plusBtn.Font = Theme.FontBold
+		plusBtn.TextColor3 = Theme.Colors.TextLight
+		plusBtn.TextSize = 11
+		plusBtn.Text = "+"
+		plusBtn.Visible = false
+		plusBtn.Parent = row
+
+		local plusCorner = Instance.new("UICorner")
+		plusCorner.CornerRadius = UDim.new(0, 4)
+		plusCorner.Parent = plusBtn
+
+		ui.StatRows[stat] = {
+			Label = label, 
+			PlusButton = plusBtn,
+			MinusButton = minusBtn
+		}
+	end
+
+	ui.InfoRows = {}
+	for i, layout in ipairs(derivedStatsLayout) do
+		local yPos = (i - 1) * 21
+		local row = Instance.new("Frame")
+		row.Name = "Row_" .. layout.Key
+		row.Size = UDim2.new(1, 0, 0, 18)
+		row.Position = UDim2.new(0, 0, 0, yPos)
+		row.BackgroundTransparency = 1
+		row.BorderSizePixel = 0
+		row.Parent = ui.StatsInfoFrame
+
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.Size = UDim2.new(0.65, 0, 1, 0)
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Font = Theme.FontRegular
+		nameLabel.TextColor3 = Theme.Colors.TextMuted
+		nameLabel.TextSize = 11
+		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		nameLabel.Text = layout.Label
+		nameLabel.Parent = row
+
+		local valLabel = Instance.new("TextLabel")
+		valLabel.Size = UDim2.new(0.35, 0, 1, 0)
+		valLabel.Position = UDim2.new(0.65, 0, 0, 0)
+		valLabel.BackgroundTransparency = 1
+		valLabel.Font = Theme.FontBold
+		valLabel.TextColor3 = layout.Color or Theme.Colors.TextLight
+		valLabel.TextSize = 11
+		valLabel.TextXAlignment = Enum.TextXAlignment.Right
+		valLabel.Text = "--"
+		valLabel.Parent = row
+
+		ui.InfoRows[layout.Key] = {
+			NameLabel = nameLabel,
+			ValueLabel = valLabel,
+			Config = layout
+		}
+	end
+
+	return ui
+end
+
+return PlayerStatsGui

@@ -1,0 +1,25 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
+
+local CritSystem = {}
+
+function CritSystem.RollCrit(critChance)
+	critChance = type(critChance) == "number" and critChance or 0.00
+	local roll = math.random()
+	return roll <= critChance
+end
+
+function CritSystem.CalculateCritDamage(baseDamage, critDamageBonus)
+	baseDamage = type(baseDamage) == "number" and baseDamage or 0
+	critDamageBonus = type(critDamageBonus) == "number" and critDamageBonus or 0.00
+
+	-- v1.2 Crit Fallback
+	if critDamageBonus <= 0 then
+		critDamageBonus = PlayerStatsConfig.FALLBACK_CRIT_BONUS
+	end
+
+	local critBonusValue = baseDamage * critDamageBonus
+	return baseDamage + critBonusValue
+end
+
+return CritSystem

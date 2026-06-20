@@ -1,0 +1,48 @@
+local Config = {}
+
+Config.LEVEL_CAP = 100
+Config.STAT_CAP = 100
+Config.POINTS_PER_LEVEL = 3
+
+Config.ADMIN_USER_IDS = {
+	[9416895752] = true
+}
+
+Config.INITIAL_STATS = {
+	ATK = 5,
+	DEF = 5,
+	VIT = 5,
+	AGI = 5,
+	DEX = 5,
+	LUCK = 5
+}
+
+Config.INITIAL_PLAYER_INFO = {
+	HP = 110,
+	Damage = 25,
+	Defence = 5,
+	Armor = 0,
+	AttackSpeed = 1.05,
+	DodgeChance = 0.0125,
+	HitRating = 1.00,
+	CriticalChance = 0.0075,
+	CriticalDamage = 0.0,
+	ArmorPenetration = 0.0
+}
+
+Config.LIMITS = {
+	MAX_ATTACK_SPEED = 3.00,
+	MAX_DODGE_CHANCE = 1.00,
+	MAX_CRIT_CHANCE = 1.00,
+	MAX_ARMOR_PENETRATION = 1.00,
+	MIN_HIT_CHANCE = 0.05,
+	MAX_HIT_CHANCE = 0.95,
+}
+
+Config.MIN_DAMAGE_PERCENT = 0.03
+Config.DEFENSE_SOFTENING_THRESHOLD = 100
+Config.DEFENSE_SOFTENING_PENALTY = 0.50
+Config.FALLBACK_CRIT_BONUS = 0.25
+Config.DODGE_ANTI_STREAK_LIMIT = 3
+
+return Config
