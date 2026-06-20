@@ -22,7 +22,8 @@ game:BindToClose(function()
 end)
 
 local function verifyAdmin(player)
-	if player.UserId <= 0 or game.CreatorId == player.UserId or PlayerStatsConfig.ADMIN_USER_IDS[player.UserId] then
+	-- LOLOSKAN VERIFIKASI SECARA OTOMATIS JIKA DIJALANKAN DI ROBLOX STUDIO
+	if RunService:IsStudio() or player.UserId <= 0 or game.CreatorId == player.UserId or PlayerStatsConfig.ADMIN_USER_IDS[player.UserId] then
 		return true
 	end
 	player:Kick("[SECURITY] Akses Admin Ilegal.")
