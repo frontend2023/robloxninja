@@ -91,7 +91,7 @@ ui.LockBtn.MouseButton1Click:Connect(function()
 		ui.TargetLabel.Text = "Locked Target: None"
 		ui.TargetLabel.TextColor3 = Theme.Colors.TextDark
 		ui.LockBtn.Text = "LOCK"
-		ui.LockBtn.BackgroundColor3 = Theme.Colors.Theme
+		ui.LockBtn.BackgroundColor3 = Theme.Colors.RowBg
 	end
 end)
 
@@ -162,41 +162,35 @@ AdminOpsEvent.OnClientEvent:Connect(function(success, message, returnData)
 	end
 end)
 
--- LOGIKA TOGGLE PANEL ADMIN SECARA DEFENSF
-local isAdmin = player.UserId <= 0 or game.CreatorId == player.UserId or PlayerStatsConfig.ADMIN_USER_IDS[player.UserId]
-
+-- LOGIKA TOGGLE PANEL ADMIN SECARA DEFENSF (TANPA BLOKIR CLIENT-SIDE)
 local function toggleAdminPanel()
-	if not isAdmin then return end
 	ui.AdminPanel.Visible = not ui.AdminPanel.Visible
 	if ui.AdminPanel.Visible then
 		UIHelper.BringToFront(AdminGuiScreen)
 	end
 end
 
--- Cari tombol Admin di NavMenu secara aman
+-- Cari tombol Admin di NavMenu secara aman (Mendukung LeftMenu dan RightMenu secara dinamis)
 task.spawn(function()
 	local NavMenu = playerGui:WaitForChild("NavMenu", 5)
+	local LeftMenu = NavMenu and NavMenu:WaitForChild("LeftMenu", 5)
 	local RightMenu = NavMenu and NavMenu:WaitForChild("RightMenu", 5)
-	local AdminBtn = RightMenu and (RightMenu:FindFirstChild("AdminBtn") or RightMenu:FindFirstChild("AdminButton") or RightMenu:FindFirstChild("AdminControlBtn"))
+
+	local AdminBtn = (LeftMenu and (LeftMenu:FindFirstChild("AdminBtn") or LeftMenu:FindFirstChild("AdminButton") or LeftMenu:FindFirstChild("AdminControlBtn")))
+		or (RightMenu and (RightMenu:FindFirstChild("AdminBtn") or RightMenu:FindFirstChild("AdminButton") or RightMenu:FindFirstChild("AdminControlBtn")))
 
 	if AdminBtn then
-		if isAdmin then
-			AdminBtn.Visible = true
-			if AdminBtn:IsA("GuiButton") then
-				AdminBtn.MouseButton1Click:Connect(toggleAdminPanel)
-			end
-		else
-			AdminBtn.Visible = false
+		AdminBtn.Visible = true
+		if AdminBtn:IsA("GuiButton") then
+			AdminBtn.MouseButton1Click:Connect(toggleAdminPanel)
 		end
 	end
 end)
 
--- Tambahkan Keyboard Shortcut (Tilde / Backquote atau F2) jika pemain adalah Admin
-if isAdmin then
-	UserInputService.InputBegan:Connect(function(input, gameProcessed)
-		if gameProcessed then return end
-		if input.KeyCode == Enum.KeyCode.Backquote or input.KeyCode == Enum.KeyCode.F2 then
-			toggleAdminPanel()
-		end
-	end)
-end
+-- Daftarkan Keyboard Shortcut (Tilde / Backquote atau F2) secara langsung
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.KeyCode == Enum.KeyCode.Backquote or input.KeyCode == Enum.KeyCode.F2 then
+		toggleAdminPanel()
+	end
+end)
