@@ -1,4 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
 
 -- HUBUNGKAN JALUR BARU KE FORMULA ENGINE
@@ -11,12 +12,17 @@ local HitSystem = {}
 local MissStreaks = {}
 
 local function getEntityId(entity)
+	if not entity then return "UNKNOWN" end
 	if typeof(entity) == "Instance" then
 		if entity:IsA("Player") then
 			return "P_" .. tostring(entity.UserId)
-		else
-			return "E_" .. entity:GetDebugId()
+		elseif entity:IsA("Model") then
+			local player = Players:GetPlayerFromCharacter(entity)
+			if player then
+				return "P_" .. tostring(player.UserId)
+			end
 		end
+		return "E_" .. entity:GetDebugId()
 	elseif type(entity) == "string" then
 		return entity
 	end

@@ -1,6 +1,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
 
+local ModulesFolder = ReplicatedStorage:WaitForChild("Modules")
+local CombatFolder = ModulesFolder:WaitForChild("Combat")
+local CritSystem = require(CombatFolder:WaitForChild("CritSystem"))
+
 local DamageCalculator = {}
 
 function DamageCalculator.CalculateFinalDamage(baseDamage, effectiveDefense, isCrit, critDamageBonus)
@@ -11,11 +15,6 @@ function DamageCalculator.CalculateFinalDamage(baseDamage, effectiveDefense, isC
 	local initialDamage = baseDamage
 
 	if isCrit then
-		-- HUBUNGKAN JALUR NESTED BARU KE CRIT SYSTEM
-		local ModulesFolder = ReplicatedStorage:WaitForChild("Modules")
-		local CombatFolder = ModulesFolder:WaitForChild("Combat")
-		local CritSystem = require(CombatFolder:WaitForChild("CritSystem"))
-
 		initialDamage = CritSystem.CalculateCritDamage(baseDamage, critDamageBonus)
 	end
 

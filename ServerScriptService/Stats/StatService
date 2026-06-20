@@ -19,6 +19,9 @@ local StatUpdateEvent = StatsRemotesFolder:WaitForChild("StatUpdateEvent")
 local AllocateStatRequest = StatsRemotesFolder:WaitForChild("AllocateStatRequest")
 local ResetStatsRequest = StatsRemotesFolder:WaitForChild("ResetStatsRequest")
 local SessionData = {}
+local IgnoreSaveList = {}
+local isGlobalResetActive = false
+
 local function syncStatsToClient(player)
 	local data = SessionData[player.UserId]
 	if not data then return end
@@ -40,8 +43,11 @@ local function onPlayerAdded(player)
 end
 local function onPlayerRemoving(player)
 	local data = SessionData[player.UserId]
-	if data then PlayerStatsDatabase.SaveData(player, { Level = data.Level, Points = data.Points, BaseStats = data.BaseStats }) end
+	if data and not IgnoreSaveList[player.UserId] and not isGlobalResetActive then
+		PlayerStatsDatabase.SaveData(player, { Level = data.Level, Points = data.Points, BaseStats = data.BaseStats })
+	end
 	SessionData[player.UserId] = nil
+	IgnoreSaveList[player.UserId] = nil
 end
 Players.PlayerAdded:Connect(onPlayerAdded)
 Players.PlayerRemoving:Connect(onPlayerRemoving)
@@ -79,6 +85,12 @@ function StatServiceAPI.AddLevel(player, amount)
 	updatePlayerDerivedStats(player)
 	syncStatsToClient(player)
 	PlayerStatsDatabase.SaveData(player, { Level = data.Level, Points = data.Points, BaseStats = data.BaseStats })
+end
+function StatServiceAPI.IgnoreSessionSave(userId)
+	IgnoreSaveList[userId] = true
+end
+function StatServiceAPI.IgnoreAllSessionSaves()
+	isGlobalResetActive = true
 end
 _G.StatService = StatServiceAPI
 return StatServiceAPI

@@ -61,11 +61,15 @@ AdminOpsEvent.OnServerEvent:Connect(function(player, op, payload)
 			local targetUserId = tonumber(payload.TargetUserId)
 			local targetPlayer = Players:GetPlayerByUserId(targetUserId)
 			PlayerStatsDatabase.ResetPlayerData(targetUserId)
-			if targetPlayer then targetPlayer:Kick("Data di-reset.") end
+			if targetPlayer then
+				StatService.IgnoreSessionSave(targetUserId)
+				targetPlayer:Kick("Data di-reset.")
+			end
 			AdminOpsEvent:FireClient(player, true, "Database target di-reset.")
 		else AdminOpsEvent:FireClient(player, false, "Sesi keamanan reset gagal!") end
 	elseif op == "OP_RG_11" then
 		if validateToken(player.UserId, payload.Token) then
+			StatService.IgnoreAllSessionSaves()
 			PlayerStatsDatabase.IncrementGlobalVersion()
 			for _, p in ipairs(Players:GetPlayers()) do p:Kick("Global Reset [VER_Q].") end
 		else AdminOpsEvent:FireClient(player, false, "Sesi keamanan reset gagal!") end
