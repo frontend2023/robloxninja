@@ -12,6 +12,7 @@ local StatsFolder = PlayerScripts:WaitForChild("Stats")
 local PlayerStatsGui = require(StatsFolder:WaitForChild("PlayerStatsGui"))
 local HelperFolder = PlayerScripts:WaitForChild("Helper")
 local UIHelper = require(HelperFolder:WaitForChild("UIHelper"))
+local Theme = require(HelperFolder:WaitForChild("Theme"))
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
 local StatsRemotes = Remotes and Remotes:WaitForChild("Stats", 5)
