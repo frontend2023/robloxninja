@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local MarketplaceService = game:GetService("MarketplaceService")
 
 local StatServiceAPI = {}
 local statsUpdatedCallback = nil
@@ -24,7 +25,6 @@ local RemotesFolder = ReplicatedStorage:WaitForChild("Remotes")
 local StatsRemotesFolder = RemotesFolder:WaitForChild("Stats")
 local StatUpdateEvent = StatsRemotesFolder:WaitForChild("StatUpdateEvent")
 local AllocateStatRequest = StatsRemotesFolder:WaitForChild("AllocateStatRequest")
-local ResetStatsRequest = StatsRemotesFolder:WaitForChild("ResetStatsRequest")
 
 local SessionData = {}
 local IgnoreSaveList = {}
@@ -111,25 +111,6 @@ AllocateStatRequest.OnServerEvent:Connect(function(player, batchAllocations)
 	})
 end)
 
-ResetStatsRequest.OnServerEvent:Connect(function(player)
-	local data = SessionData[player.UserId]
-	if not data then return end
-	
-	data.Points = (data.Level - 1) * PlayerStatsConfig.POINTS_PER_LEVEL
-	for stat, _ in pairs(data.BaseStats) do
-		data.BaseStats[stat] = PlayerStatsConfig.INITIAL_STATS[stat]
-	end
-	
-	updatePlayerDerivedStats(player)
-	syncStatsToClient(player)
-	
-	PlayerStatsDatabase.SaveData(player, {
-		Level = data.Level,
-		Points = data.Points,
-		BaseStats = data.BaseStats
-	})
-end)
-
 function StatServiceAPI.GetPlayerData(userId)
 	return SessionData[userId]
 end
@@ -169,6 +150,39 @@ end
 function StatServiceAPI.ReloadPlayerData(player)
 	onPlayerAdded(player)
 end
+
+-- PEMROSESAN STRUKTUR SAKRAL DEVELOPER PRODUCT (PROCESSRECEIPT)
+local function processReceipt(receiptInfo)
+	local player = Players:GetPlayerByUserId(receiptInfo.PlayerId)
+	if not player then
+		return Enum.ProductPurchaseDecision.NotProcessedYet
+	end
+
+	-- RESET ATRIBUT PLAYER BERBAYAR (PRODUK ID: 3605649366)
+	if receiptInfo.ProductId == 3605649366 then
+		local data = SessionData[player.UserId]
+		if data then
+			data.Points = (data.Level - 1) * PlayerStatsConfig.POINTS_PER_LEVEL
+			for stat, _ in pairs(data.BaseStats) do
+				data.BaseStats[stat] = PlayerStatsConfig.INITIAL_STATS[stat]
+			end
+			updatePlayerDerivedStats(player)
+			syncStatsToClient(player)
+			
+			PlayerStatsDatabase.SaveData(player, {
+				Level = data.Level,
+				Points = data.Points,
+				BaseStats = data.BaseStats
+			})
+			print("[DEVELOPER PRODUCT] Player", player.Name, "successfully purchased Stats Reset. Transaction ID:", receiptInfo.PurchaseId)
+		end
+		return Enum.ProductPurchaseDecision.PurchaseGranted
+	end
+
+	return Enum.ProductPurchaseDecision.PurchaseGranted
+end
+
+MarketplaceService.ProcessReceipt = processReceipt
 
 _G.StatService = StatServiceAPI
 return StatServiceAPI

@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local MarketplaceService = game:GetService("MarketplaceService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -18,7 +19,7 @@ local StatUpdateEvent = StatsRemotes and StatsRemotes:WaitForChild("StatUpdateEv
 local AllocateStatRequest = StatsRemotes and StatsRemotes:WaitForChild("AllocateStatRequest", 5)
 local ResetStatsRequest = StatsRemotes and StatsRemotes:WaitForChild("ResetStatsRequest", 5)
 
-if not StatUpdateEvent or not AllocateStatRequest or not ResetStatsRequest then
+if not StatUpdateEvent or not AllocateStatRequest then
 	error("[RPG ERROR] RemoteEvent status tidak lengkap!")
 end
 
@@ -68,6 +69,7 @@ ui.InfoTabBtn.MouseButton1Click:Connect(function() selectTab("INFO") end)
 
 ui.CloseBtn.MouseButton1Click:Connect(function()
 	ui.StatPanel.Visible = false
+	ui.ConfirmPanel.Visible = false
 end)
 
 local function formatValue(val, isPercent)
@@ -161,11 +163,21 @@ ui.ApplyBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
+-- INTERAKSI TOMBOL RESET STATUS (MEMUNCULKAN POP-UP KONFIRMASI)
 ui.ResetBtn.MouseButton1Click:Connect(function()
-	ResetStatsRequest:FireServer()
+	ui.ConfirmPanel.Visible = true
+end)
+
+ui.ConfirmCancelBtn.MouseButton1Click:Connect(function()
+	ui.ConfirmPanel.Visible = false
+end)
+
+ui.ConfirmOkBtn.MouseButton1Click:Connect(function()
+	ui.ConfirmPanel.Visible = false
 	for stat, _ in pairs(pendingAllocations) do
 		pendingAllocations[stat] = 0
 	end
+	MarketplaceService:PromptProductPurchase(player, 3605649366)
 end)
 
 StatUpdateEvent.OnClientEvent:Connect(function(data)

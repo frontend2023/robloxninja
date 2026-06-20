@@ -213,6 +213,53 @@ function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
 		}
 	end
 
+	-- PANEL KONFIRMASI PEMBELIAN RESET STATUS (POP-UP OVERLAY)
+	ui.ConfirmPanel = UIHelper.MakeRoundedFrame(ui.StatPanel, "ConfirmPanel", UDim2.new(1, 0, 1, 0), UDim2.new(0, 0, 0, 0), Color3.fromRGB(15, 15, 15), Theme.CornerRadius)
+	ui.ConfirmPanel.BackgroundTransparency = 0.15
+	ui.ConfirmPanel.ZIndex = 10
+	ui.ConfirmPanel.Visible = false
+
+	local ConfirmTitle = Instance.new("TextLabel")
+	ConfirmTitle.Size = UDim2.new(1, 0, 0, 80)
+	ConfirmTitle.Position = UDim2.new(0, 0, 0, 60)
+	ConfirmTitle.BackgroundTransparency = 1
+	ConfirmTitle.Font = Theme.FontBold
+	ConfirmTitle.TextColor3 = Theme.Colors.TextLight
+	ConfirmTitle.TextSize = 12
+	ConfirmTitle.Text = "RESET ALL STATS?\n\nThis will reset all your stats to default starting values.\nCost: 99 Robux"
+	ConfirmTitle.ZIndex = 11
+	ConfirmTitle.Parent = ui.ConfirmPanel
+
+	ui.ConfirmCancelBtn = Instance.new("TextButton")
+	ui.ConfirmCancelBtn.Size = UDim2.new(0, 100, 0, 30)
+	ui.ConfirmCancelBtn.Position = UDim2.new(0.5, -110, 0, 180)
+	ui.ConfirmCancelBtn.BackgroundColor3 = Theme.Colors.RowBg
+	ui.ConfirmCancelBtn.Font = Theme.FontBold
+	ui.ConfirmCancelBtn.TextColor3 = Theme.Colors.TextLight
+	ui.ConfirmCancelBtn.TextSize = 11
+	ui.ConfirmCancelBtn.Text = "CANCEL"
+	ui.ConfirmCancelBtn.ZIndex = 11
+	ui.ConfirmCancelBtn.Parent = ui.ConfirmPanel
+
+	local ccCorner = Instance.new("UICorner")
+	ccCorner.CornerRadius = UDim.new(0, 6)
+	ccCorner.Parent = ui.ConfirmCancelBtn
+
+	ui.ConfirmOkBtn = Instance.new("TextButton")
+	ui.ConfirmOkBtn.Size = UDim2.new(0, 100, 0, 30)
+	ui.ConfirmOkBtn.Position = UDim2.new(0.5, 10, 0, 180)
+	ui.ConfirmOkBtn.BackgroundColor3 = Theme.Colors.Success
+	ui.ConfirmOkBtn.Font = Theme.FontBold
+	ui.ConfirmOkBtn.TextColor3 = Theme.Colors.TextLight
+	ui.ConfirmOkBtn.TextSize = 11
+	ui.ConfirmOkBtn.Text = "BUY & RESET"
+	ui.ConfirmOkBtn.ZIndex = 11
+	ui.ConfirmOkBtn.Parent = ui.ConfirmPanel
+
+	local coCorner = Instance.new("UICorner")
+	coCorner.CornerRadius = UDim.new(0, 6)
+	coCorner.Parent = ui.ConfirmOkBtn
+
 	return ui
 end
 
