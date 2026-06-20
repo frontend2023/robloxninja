@@ -7,25 +7,10 @@ local UIHelper = require(HelperFolder:WaitForChild("UIHelper"))
 
 local PlayerStatsGui = {}
 
-local function makeRoundedFrame(parent, name, size, pos, bgCol, radius)
-	local frame = Instance.new("Frame")
-	frame.Name = name
-	frame.Size = size
-	frame.Position = pos
-	frame.BackgroundColor3 = bgCol
-	frame.BorderSizePixel = 0
-	frame.Parent = parent
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, radius)
-	corner.Parent = frame
-	return frame
-end
-
 function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
 	local ui = {}
 
-	ui.StatPanel = makeRoundedFrame(characterUi, "StatPanel", UDim2.new(0, 260, 0, 330), UDim2.new(0.5, -130, 0.5, -165), Theme.Colors.Background, Theme.CornerRadius)
+	ui.StatPanel = UIHelper.MakeRoundedFrame(characterUi, "StatPanel", UDim2.new(0, 260, 0, 330), UDim2.new(0.5, -130, 0.5, -165), Theme.Colors.Background, Theme.CornerRadius)
 	ui.StatPanel.Visible = false
 
 	local stroke = Instance.new("UIStroke")
@@ -78,7 +63,7 @@ function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
 	ui.PointsLabel.Text = "Points: 0"
 	ui.PointsLabel.Parent = ui.StatPanel
 
-	local TabBar = makeRoundedFrame(ui.StatPanel, "TabBar", UDim2.new(1, -20, 0, 26), UDim2.new(0, 10, 0, 60), Theme.Colors.TabBarBg, Theme.RowCornerRadius)
+	local TabBar = UIHelper.MakeRoundedFrame(ui.StatPanel, "TabBar", UDim2.new(1, -20, 0, 26), UDim2.new(0, 10, 0, 60), Theme.Colors.TabBarBg, Theme.RowCornerRadius)
 
 	ui.BaseTabBtn = Instance.new("TextButton")
 	ui.BaseTabBtn.Size = UDim2.new(0.5, 0, 1, 0)
@@ -99,10 +84,10 @@ function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
 	ui.InfoTabBtn.TextColor3 = Theme.Colors.TextMuted
 	ui.InfoTabBtn.Parent = TabBar
 
-	ui.ActiveIndicator = makeRoundedFrame(TabBar, "Indicator", UDim2.new(0.5, 0, 0, 2), UDim2.new(0, 0, 1, -2), Theme.Colors.PointGreen, 1)
+	ui.ActiveIndicator = UIHelper.MakeRoundedFrame(TabBar, "Indicator", UDim2.new(0.5, 0, 0, 2), UDim2.new(0, 0, 1, -2), Theme.Colors.PointGreen, 1)
 
-	ui.BaseStatsFrame = makeRoundedFrame(ui.StatPanel, "BaseStatsTab", UDim2.new(1, -20, 0, 195), UDim2.new(0, 10, 0, 92), Theme.Colors.Background, 0)
-	ui.StatsInfoFrame = makeRoundedFrame(ui.StatPanel, "StatsInfoTab", UDim2.new(1, -20, 0, 195), UDim2.new(0, 10, 0, 92), Theme.Colors.Background, 0)
+	ui.BaseStatsFrame = UIHelper.MakeRoundedFrame(ui.StatPanel, "BaseStatsTab", UDim2.new(1, -20, 0, 195), UDim2.new(0, 10, 0, 92), Theme.Colors.Background, 0)
+	ui.StatsInfoFrame = UIHelper.MakeRoundedFrame(ui.StatPanel, "StatsInfoTab", UDim2.new(1, -20, 0, 195), UDim2.new(0, 10, 0, 92), Theme.Colors.Background, 0)
 	ui.BaseStatsFrame.BackgroundTransparency = 1
 	ui.StatsInfoFrame.BackgroundTransparency = 1
 	ui.StatsInfoFrame.Visible = false
@@ -139,7 +124,7 @@ function PlayerStatsGui.Create(characterUi, derivedStatsLayout, baseStatNames)
 	ui.StatRows = {}
 	for i, stat in ipairs(baseStatNames) do
 		local yPos = (i - 1) * 29
-		local row = makeRoundedFrame(ui.BaseStatsFrame, "Row_" .. stat, UDim2.new(1, 0, 0, 25), UDim2.new(0, 0, 0, yPos), Theme.Colors.RowBg, Theme.RowCornerRadius)
+		local row = UIHelper.MakeRoundedFrame(ui.BaseStatsFrame, "Row_" .. stat, UDim2.new(1, 0, 0, 25), UDim2.new(0, 0, 0, yPos), Theme.Colors.RowBg, Theme.RowCornerRadius)
 
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(0.6, 0, 1, 0)

@@ -3,28 +3,14 @@ local player = Players.LocalPlayer
 local PlayerScripts = player:WaitForChild("PlayerScripts")
 local HelperFolder = PlayerScripts:WaitForChild("Helper")
 local Theme = require(HelperFolder:WaitForChild("Theme"))
+local UIHelper = require(HelperFolder:WaitForChild("UIHelper"))
 
 local HealthBarGui = {}
-
-local function makeRoundedFrame(parent, name, size, pos, bgCol, radius)
-	local frame = Instance.new("Frame")
-	frame.Name = name
-	frame.Size = size
-	frame.Position = pos
-	frame.BackgroundColor3 = bgCol
-	frame.BorderSizePixel = 0
-	frame.Parent = parent
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, radius)
-	corner.Parent = frame
-	return frame
-end
 
 function HealthBarGui.Create(healthBarGui)
 	local hud = {}
 
-	hud.HUD_HP = makeRoundedFrame(healthBarGui, "HUD_HP", UDim2.new(0, 240, 0, 58), UDim2.new(1, -250, 0, 20), Theme.Colors.Header, Theme.CornerRadius)
+	hud.HUD_HP = UIHelper.MakeRoundedFrame(healthBarGui, "HUD_HP", UDim2.new(0, 240, 0, 58), UDim2.new(1, -250, 0, 20), Theme.Colors.Header, Theme.CornerRadius)
 
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = Color3.fromRGB(45, 45, 45)
@@ -54,8 +40,8 @@ function HealthBarGui.Create(healthBarGui)
 	hud.LevelLabel.Text = "Lv. --"
 	hud.LevelLabel.Parent = hud.HUD_HP
 
-	local HPBarBG = makeRoundedFrame(hud.HUD_HP, "BarBG", UDim2.new(1, -20, 0, 16), UDim2.new(0, 10, 0, 30), Color3.fromRGB(50, 20, 20), Theme.RowCornerRadius)
-	hud.HPBarFill = makeRoundedFrame(HPBarBG, "BarFill", UDim2.new(1, 0, 1, 0), UDim2.new(0, 0, 0, 0), Theme.Colors.Danger, Theme.RowCornerRadius)
+	local HPBarBG = UIHelper.MakeRoundedFrame(hud.HUD_HP, "BarBG", UDim2.new(1, -20, 0, 16), UDim2.new(0, 10, 0, 30), Color3.fromRGB(50, 20, 20), Theme.RowCornerRadius)
+	hud.HPBarFill = UIHelper.MakeRoundedFrame(HPBarBG, "BarFill", UDim2.new(1, 0, 1, 0), UDim2.new(0, 0, 0, 0), Theme.Colors.Danger, Theme.RowCornerRadius)
 
 	hud.HPText = Instance.new("TextLabel")
 	hud.HPText.Size = UDim2.new(1, 0, 1, 0)

@@ -7,25 +7,10 @@ local UIHelper = require(HelperFolder:WaitForChild("UIHelper"))
 
 local AdminGui = {}
 
-local function makeRoundedFrame(parent, name, size, pos, bgCol, radius)
-	local frame = Instance.new("Frame")
-	frame.Name = name
-	frame.Size = size
-	frame.Position = pos
-	frame.BackgroundColor3 = bgCol
-	frame.BorderSizePixel = 0
-	frame.Parent = parent
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, radius)
-	corner.Parent = frame
-	return frame
-end
-
 function AdminGui.Create(adminGuiScreen)
 	local ui = {}
 
-	ui.AdminPanel = makeRoundedFrame(adminGuiScreen, "AdminPanel", UDim2.new(0, 420, 0, 330), UDim2.new(0.5, -210, 0.5, -165), Theme.Colors.Background, Theme.CornerRadius)
+	ui.AdminPanel = UIHelper.MakeRoundedFrame(adminGuiScreen, "AdminPanel", UDim2.new(0, 420, 0, 330), UDim2.new(0.5, -210, 0.5, -165), Theme.Colors.Background, Theme.CornerRadius)
 	ui.AdminPanel.Visible = false
 
 	local stroke = Instance.new("UIStroke")
@@ -56,7 +41,7 @@ function AdminGui.Create(adminGuiScreen)
 	closeCorner.CornerRadius = UDim.new(1, 0)
 	closeCorner.Parent = ui.CloseBtn
 
-	local SearchFrame = makeRoundedFrame(ui.AdminPanel, "SearchFrame", UDim2.new(1, -20, 0, 26), UDim2.new(0, 10, 0, 36), Theme.Colors.TabBarBg, Theme.RowCornerRadius)
+	local SearchFrame = UIHelper.MakeRoundedFrame(ui.AdminPanel, "SearchFrame", UDim2.new(1, -20, 0, 26), UDim2.new(0, 10, 0, 36), Theme.Colors.TabBarBg, Theme.RowCornerRadius)
 
 	ui.SearchBox = Instance.new("TextBox")
 	ui.SearchBox.Size = UDim2.new(1, -110, 1, 0)
@@ -110,7 +95,7 @@ function AdminGui.Create(adminGuiScreen)
 	ui.TargetLabel.Text = "Locked Target: None"
 	ui.TargetLabel.Parent = ui.AdminPanel
 
-	local TabBar = makeRoundedFrame(ui.AdminPanel, "TabBar", UDim2.new(1, -20, 0, 26), UDim2.new(0, 10, 0, 86), Theme.Colors.TabBarBg, Theme.RowCornerRadius)
+	local TabBar = UIHelper.MakeRoundedFrame(ui.AdminPanel, "TabBar", UDim2.new(1, -20, 0, 26), UDim2.new(0, 10, 0, 86), Theme.Colors.TabBarBg, Theme.RowCornerRadius)
 
 	ui.PlayerTabBtn = Instance.new("TextButton")
 	ui.PlayerTabBtn.Size = UDim2.new(0.5, 0, 1, 0)
@@ -131,16 +116,16 @@ function AdminGui.Create(adminGuiScreen)
 	ui.DatabaseTabBtn.TextColor3 = Theme.Colors.TextMuted
 	ui.DatabaseTabBtn.Parent = TabBar
 
-	ui.ActiveIndicator = makeRoundedFrame(TabBar, "Indicator", UDim2.new(0.5, 0, 0, 2), UDim2.new(0, 0, 1, -2), Theme.Colors.PointGreen, 1)
+	ui.ActiveIndicator = UIHelper.MakeRoundedFrame(TabBar, "Indicator", UDim2.new(0.5, 0, 0, 2), UDim2.new(0, 0, 1, -2), Theme.Colors.PointGreen, 1)
 
-	ui.PlayerTabFrame = makeRoundedFrame(ui.AdminPanel, "PlayerTab", UDim2.new(1, -20, 0, 150), UDim2.new(0, 10, 0, 118), Theme.Colors.Background, 0)
-	ui.DatabaseTabFrame = makeRoundedFrame(ui.AdminPanel, "DatabaseTab", UDim2.new(1, -20, 0, 150), UDim2.new(0, 10, 0, 118), Theme.Colors.Background, 0)
+	ui.PlayerTabFrame = UIHelper.MakeRoundedFrame(ui.AdminPanel, "PlayerTab", UDim2.new(1, -20, 0, 150), UDim2.new(0, 10, 0, 118), Theme.Colors.Background, 0)
+	ui.DatabaseTabFrame = UIHelper.MakeRoundedFrame(ui.AdminPanel, "DatabaseTab", UDim2.new(1, -20, 0, 150), UDim2.new(0, 10, 0, 118), Theme.Colors.Background, 0)
 	ui.PlayerTabFrame.BackgroundTransparency = 1
 	ui.DatabaseTabFrame.BackgroundTransparency = 1
 	ui.DatabaseTabFrame.Visible = false
 
 	local function makeInputRow(parent, name, labelText, yPos)
-		local row = makeRoundedFrame(parent, name, UDim2.new(1, 0, 0, 28), UDim2.new(0, 0, 0, yPos), Theme.Colors.RowBg, Theme.RowCornerRadius)
+		local row = UIHelper.MakeRoundedFrame(parent, name, UDim2.new(1, 0, 0, 28), UDim2.new(0, 0, 0, yPos), Theme.Colors.RowBg, Theme.RowCornerRadius)
 
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(0.4, 0, 1, 0)
@@ -217,7 +202,7 @@ function AdminGui.Create(adminGuiScreen)
 	rgCorner.CornerRadius = UDim.new(0, 4)
 	rgCorner.Parent = ui.ResetGlobalBtn
 
-	ui.ConfirmPanel = makeRoundedFrame(ui.AdminPanel, "ConfirmPanel", UDim2.new(1, 0, 1, 0), UDim2.new(0, 0, 0, 0), Color3.fromRGB(15, 15, 15), Theme.CornerRadius)
+	ui.ConfirmPanel = UIHelper.MakeRoundedFrame(ui.AdminPanel, "ConfirmPanel", UDim2.new(1, 0, 1, 0), UDim2.new(0, 0, 0, 0), Color3.fromRGB(15, 15, 15), Theme.CornerRadius)
 	ui.ConfirmPanel.BackgroundTransparency = 0.1
 	ui.ConfirmPanel.ZIndex = 10
 	ui.ConfirmPanel.Visible = false

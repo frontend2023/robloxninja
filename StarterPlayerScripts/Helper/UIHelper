@@ -113,4 +113,31 @@ function UIHelper.MakeDraggable(frame, handle)
 	end)
 end
 
+function UIHelper.GetOrCreateScreenGui(name)
+	local gui = playerGui:FindFirstChild(name)
+	if not gui then
+		gui = Instance.new("ScreenGui")
+		gui.Name = name
+		gui.ResetOnSpawn = false
+		gui.IgnoreGuiInset = true
+		gui.Parent = playerGui
+	end
+	return gui
+end
+
+function UIHelper.MakeRoundedFrame(parent, name, size, pos, bgCol, radius)
+	local frame = Instance.new("Frame")
+	frame.Name = name
+	frame.Size = size
+	frame.Position = pos
+	frame.BackgroundColor3 = bgCol
+	frame.BorderSizePixel = 0
+	frame.Parent = parent
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, radius)
+	corner.Parent = frame
+	return frame
+end
+
 return UIHelper

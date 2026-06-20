@@ -9,6 +9,8 @@ local PlayerScripts = player:WaitForChild("PlayerScripts")
 
 local StatsFolder = PlayerScripts:WaitForChild("Stats")
 local HealthBarGui = require(StatsFolder:WaitForChild("HealthBarGui"))
+local HelperFolder = PlayerScripts:WaitForChild("Helper")
+local UIHelper = require(HelperFolder:WaitForChild("UIHelper"))
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
 local StatsRemotes = Remotes and Remotes:WaitForChild("Stats", 5)
@@ -19,19 +21,7 @@ if not StatUpdateEvent or not HealthUpdateEvent then
 	error("[RPG ERROR] RemoteEvent status tidak lengkap di ReplicatedStorage/Remotes/Stats!")
 end
 
-local function getOrCreateScreenGui(name)
-	local gui = playerGui:FindFirstChild(name)
-	if not gui then
-		gui = Instance.new("ScreenGui")
-		gui.Name = name
-		gui.ResetOnSpawn = false
-		gui.IgnoreGuiInset = true
-		gui.Parent = playerGui
-	end
-	return gui
-end
-
-local HealthBarGUI = getOrCreateScreenGui("HealthBarGUI")
+local HealthBarGUI = UIHelper.GetOrCreateScreenGui("HealthBarGUI")
 local hud = HealthBarGui.Create(HealthBarGUI)
 
 task.spawn(function()

@@ -9,6 +9,8 @@ local PlayerScripts = player:WaitForChild("PlayerScripts")
 local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
 local StatsFolder = PlayerScripts:WaitForChild("Stats")
 local PlayerStatsGui = require(StatsFolder:WaitForChild("PlayerStatsGui"))
+local HelperFolder = PlayerScripts:WaitForChild("Helper")
+local UIHelper = require(HelperFolder:WaitForChild("UIHelper"))
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
 local StatsRemotes = Remotes and Remotes:WaitForChild("Stats", 5)
@@ -33,19 +35,7 @@ local DERIVED_STATS_LAYOUT = {
 }
 local baseStatNames = {"ATK", "DEF", "VIT", "AGI", "DEX", "LUCK"}
 
-local function getOrCreateScreenGui(name)
-	local gui = playerGui:FindFirstChild(name)
-	if not gui then
-		gui = Instance.new("ScreenGui")
-		gui.Name = name
-		gui.ResetOnSpawn = false
-		gui.IgnoreGuiInset = true
-		gui.Parent = playerGui
-	end
-	return gui
-end
-
-local CharacterUI = getOrCreateScreenGui("CharacterUI")
+local CharacterUI = UIHelper.GetOrCreateScreenGui("CharacterUI")
 local ui = PlayerStatsGui.Create(CharacterUI, DERIVED_STATS_LAYOUT, baseStatNames)
 
 local serverData = nil
