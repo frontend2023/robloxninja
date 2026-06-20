@@ -2,6 +2,7 @@ print("[DEBUG] Loading Script: " .. script:GetFullName())
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local RunService = game:GetService("RunService")
 local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
 local DatabaseFolder = ServerScriptService:WaitForChild("Database")
 local PlayerStatsDatabase = require(DatabaseFolder:WaitForChild("PlayerStats"))
@@ -53,6 +54,7 @@ AdminOpsEvent.OnServerEvent:Connect(function(player, op, payload)
 			if data then
 				data.Points = math.max(0, data.Points + (tonumber(payload.Amount) or 0))
 				StatService.SyncPlayerData(targetPlayer)
+				PlayerStatsDatabase.SaveData(targetPlayer, { Level = data.Level, Points = data.Points, BaseStats = data.BaseStats })
 				AdminOpsEvent:FireClient(player, true, "Poin diperbarui.", {Name = targetPlayer.Name, UserId = targetPlayer.UserId, Level = data.Level})
 			end
 		end
@@ -63,7 +65,11 @@ AdminOpsEvent.OnServerEvent:Connect(function(player, op, payload)
 			PlayerStatsDatabase.ResetPlayerData(targetUserId)
 			if targetPlayer then
 				StatService.IgnoreSessionSave(targetUserId)
-				targetPlayer:Kick("Data di-reset.")
+				if RunService:IsStudio() then
+					StatService.ReloadPlayerData(targetPlayer)
+				else
+					targetPlayer:Kick("Data di-reset.")
+				end
 			end
 			AdminOpsEvent:FireClient(player, true, "Database target di-reset.")
 		else AdminOpsEvent:FireClient(player, false, "Sesi keamanan reset gagal!") end
@@ -71,7 +77,14 @@ AdminOpsEvent.OnServerEvent:Connect(function(player, op, payload)
 		if validateToken(player.UserId, payload.Token) then
 			StatService.IgnoreAllSessionSaves()
 			PlayerStatsDatabase.IncrementGlobalVersion()
-			for _, p in ipairs(Players:GetPlayers()) do p:Kick("Global Reset [VER_Q].") end
+			if RunService:IsStudio() then
+				for _, p in ipairs(Players:GetPlayers()) do
+					StatService.ReloadPlayerData(p)
+				end
+				AdminOpsEvent:FireClient(player, true, "Global Reset selesai [IsStudio].")
+			else
+				for _, p in ipairs(Players:GetPlayers()) do p:Kick("Global Reset [VER_Q].") end
+			end
 		else AdminOpsEvent:FireClient(player, false, "Sesi keamanan reset gagal!") end
 	end
 end)

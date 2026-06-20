@@ -92,5 +92,8 @@ end
 function StatServiceAPI.IgnoreAllSessionSaves()
 	isGlobalResetActive = true
 end
+function StatServiceAPI.ReloadPlayerData(player)
+	onPlayerAdded(player)
+end
 _G.StatService = StatServiceAPI
 return StatServiceAPI

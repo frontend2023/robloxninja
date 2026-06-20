@@ -3,13 +3,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
 local PlayerScripts = player:WaitForChild("PlayerScripts")
-local HelperFolder = PlayerScripts:WaitForChild("Helper")
-local UIHelper = require(HelperFolder:WaitForChild("UIHelper"))
-local Theme = require(HelperFolder:WaitForChild("Theme"))
+
+local StatsFolder = PlayerScripts:WaitForChild("Stats")
 local AdminFolder = PlayerScripts:WaitForChild("Admin")
 local AdminGui = require(AdminFolder:WaitForChild("AdminGui"))
+local HelperFolder = PlayerScripts:WaitForChild("Helper")
+local Theme = require(HelperFolder:WaitForChild("Theme"))
+local UIHelper = require(HelperFolder:WaitForChild("UIHelper"))
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
 local AdminRemotes = Remotes and Remotes:WaitForChild("Admin", 5)
@@ -17,68 +18,57 @@ local AdminOpsEvent = AdminRemotes and AdminRemotes:WaitForChild("AdminOpsEvent"
 
 if not AdminOpsEvent then return end
 
-local NavMenu = playerGui:WaitForChild("NavMenu", 10)
-local LeftMenu = NavMenu:WaitForChild("LeftMenu", 5)
-local AdminBtn = LeftMenu and LeftMenu:WaitForChild("AdminBtn", 5)
+local AdminGuiScreen = UIHelper.GetOrCreateScreenGui("AdminGUI")
+local ui = AdminGui.Create(AdminGuiScreen)
 
-local AdminUI = Instance.new("ScreenGui")
-AdminUI.Name = "AdminUI"
-AdminUI.ResetOnSpawn = false
-AdminUI.IgnoreGuiInset = true
-AdminUI.Parent = playerGui
-
-UIHelper.RegisterWindow(AdminUI)
-local ui = AdminGui.Create(AdminUI)
-
-local lockedTargetUserId = nil
-local lockedTargetName = "None"
-local searchResult = nil
-local pendingResetType = nil
 local activeSecurityToken = nil
+local searchResult = nil
+local lockedTargetUserId = nil
+local lockedTargetName = nil
+local pendingResetType = nil
 
 local function showNotification(text, isError)
 	ui.NotificationLabel.Text = text
 	ui.NotificationLabel.TextColor3 = isError and Theme.Colors.Danger or Theme.Colors.PointGreen
+	task.delay(3, function()
+		if ui.NotificationLabel.Text == text then
+			ui.NotificationLabel.Text = "Ready..."
+			ui.NotificationLabel.TextColor3 = Theme.Colors.PointGreen
+		end
+	end)
 end
-
-local function closeConfirm()
-	ui.ConfirmPanel.Visible = false
-	ui.ConfirmInput.Text = ""
-	pendingResetType = nil
-	activeSecurityToken = nil
-end
-
-closeConfirm()
-
-AdminBtn.MouseButton1Click:Connect(function()
-	ui.AdminPanel.Visible = not ui.AdminPanel.Visible
-	if ui.AdminPanel.Visible then 
-		UIHelper.BringToFront(AdminUI) 
-		closeConfirm()
-	end
-end)
-
-ui.CloseBtn.MouseButton1Click:Connect(function()
-	ui.AdminPanel.Visible = false
-	closeConfirm()
-end)
 
 local function selectTab(tabType)
-	local isPlayer = (tabType == "PLAYER")
-	ui.PlayerTabFrame.Visible = isPlayer
-	ui.DatabaseTabFrame.Visible = not isPlayer
-	ui.PlayerTabBtn.TextColor3 = isPlayer and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(130, 130, 130)
-	ui.DatabaseTabBtn.TextColor3 = not isPlayer and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(130, 130, 130)
-	TweenService:Create(ui.ActiveIndicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		Position = UDim2.new(isPlayer and 0 or 0.5, 0, 1, -2)
-	}):Play()
+	if tabType == "PLAYER" then
+		ui.PlayerTabFrame.Visible = true
+		ui.DatabaseTabFrame.Visible = false
+		ui.PlayerTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		ui.DatabaseTabBtn.TextColor3 = Color3.fromRGB(130, 130, 130)
+		TweenService:Create(ui.ActiveIndicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Position = UDim2.new(0, 0, 1, -2)
+		}):Play()
+	else
+		ui.PlayerTabFrame.Visible = false
+		ui.DatabaseTabFrame.Visible = true
+		ui.PlayerTabBtn.TextColor3 = Color3.fromRGB(130, 130, 130)
+		ui.DatabaseTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		TweenService:Create(ui.ActiveIndicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Position = UDim2.new(0.5, 0, 1, -2)
+		}):Play()
+	end
 end
 
 ui.PlayerTabBtn.MouseButton1Click:Connect(function() selectTab("PLAYER") end)
 ui.DatabaseTabBtn.MouseButton1Click:Connect(function() selectTab("DATABASE") end)
 
+ui.CloseBtn.MouseButton1Click:Connect(function()
+	ui.AdminPanel.Visible = false
+end)
+
 ui.SearchBtn.MouseButton1Click:Connect(function()
-	if ui.SearchBox.Text ~= "" then AdminOpsEvent:FireServer("OP_S_77", ui.SearchBox.Text) end
+	if ui.SearchBox.Text ~= "" then
+		AdminOpsEvent:FireServer("OP_S_77", ui.SearchBox.Text)
+	end
 end)
 
 ui.LockBtn.MouseButton1Click:Connect(function()
@@ -96,22 +86,32 @@ ui.LockBtn.MouseButton1Click:Connect(function()
 		ui.TargetLabel.Text = "Locked Target: None"
 		ui.TargetLabel.TextColor3 = Theme.Colors.TextDark
 		ui.LockBtn.Text = "LOCK"
-		ui.LockBtn.BackgroundColor3 = Theme.Colors.RowBg
+		ui.LockBtn.BackgroundColor3 = Theme.Colors.Theme
 	end
 end)
 
 ui.LevelBtn.MouseButton1Click:Connect(function()
-	if lockedTargetUserId then AdminOpsEvent:FireServer("OP_L_88", {UserId = lockedTargetUserId, Amount = tonumber(ui.LevelInput.Text) or 1}) end
+	if lockedTargetUserId then
+		AdminOpsEvent:FireServer("OP_L_88", {UserId = lockedTargetUserId, Amount = tonumber(ui.LevelInput.Text) or 1})
+	else
+		showNotification("Pilih dan Kunci (LOCK) target terlebih dahulu!", true)
+	end
 end)
 
 ui.PointsBtn.MouseButton1Click:Connect(function()
-	if lockedTargetUserId then AdminOpsEvent:FireServer("OP_P_99", {UserId = lockedTargetUserId, Amount = tonumber(ui.PointsInput.Text) or 0}) end
+	if lockedTargetUserId then
+		AdminOpsEvent:FireServer("OP_P_99", {UserId = lockedTargetUserId, Amount = tonumber(ui.PointsInput.Text) or 1})
+	else
+		showNotification("Pilih dan Kunci (LOCK) target terlebih dahulu!", true)
+	end
 end)
 
 ui.ResetPlayerBtn.MouseButton1Click:Connect(function()
 	if lockedTargetUserId then
-		pendingResetType = "SINGLE"
+		pendingResetType = "PLAYER"
 		AdminOpsEvent:FireServer("OP_RT_55")
+	else
+		showNotification("Pilih dan Kunci (LOCK) target terlebih dahulu!", true)
 	end
 end)
 
@@ -120,22 +120,25 @@ ui.ResetGlobalBtn.MouseButton1Click:Connect(function()
 	AdminOpsEvent:FireServer("OP_RT_55")
 end)
 
-ui.ConfirmCancelBtn.MouseButton1Click:Connect(closeConfirm)
+ui.ConfirmCancelBtn.MouseButton1Click:Connect(function()
+	ui.ConfirmPanel.Visible = false
+	activeSecurityToken = nil
+	pendingResetType = nil
+end)
 
 ui.ConfirmOkBtn.MouseButton1Click:Connect(function()
 	if ui.ConfirmInput.Text == "RESET" and activeSecurityToken then
-		local tokenToSend = activeSecurityToken
-		local resetType = pendingResetType
-		local targetId = lockedTargetUserId
-		closeConfirm()
-		if resetType == "SINGLE" then
-			AdminOpsEvent:FireServer("OP_RP_00", {TargetUserId = targetId, Token = tokenToSend})
-		elseif resetType == "GLOBAL" then
-			AdminOpsEvent:FireServer("OP_RG_11", {Token = tokenToSend})
+		if pendingResetType == "PLAYER" and lockedTargetUserId then
+			AdminOpsEvent:FireServer("OP_RP_00", {Token = activeSecurityToken, TargetUserId = lockedTargetUserId})
+		elseif pendingResetType == "GLOBAL" then
+			AdminOpsEvent:FireServer("OP_RG_11", {Token = activeSecurityToken})
 		end
+		ui.ConfirmPanel.Visible = false
+		ui.ConfirmInput.Text = ""
+		activeSecurityToken = nil
+		pendingResetType = nil
 	else
-		showNotification("Verifikasi gagal atau kadaluwarsa!", true)
-		closeConfirm()
+		showNotification("Konfirmasi teks salah!", true)
 	end
 end)
 
@@ -146,7 +149,8 @@ AdminOpsEvent.OnClientEvent:Connect(function(success, message, returnData)
 	elseif success and type(returnData) == "table" then
 		searchResult = returnData
 		ui.SearchBox.Text = returnData.Name
-		ui.TargetLabel.Text = "Locked Target: " .. returnData.Name .. " (Lv. " .. tostring(returnData.Level) .. ")"
+		ui.TargetLabel.Text = "Search Result: " .. returnData.Name .. " (Lv. " .. tostring(returnData.Level) .. ")"
+		ui.TargetLabel.TextColor3 = Theme.Colors.TextDark
 		showNotification(message)
 	else
 		showNotification(message, not success)
