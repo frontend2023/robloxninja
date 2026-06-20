@@ -45,6 +45,12 @@ local pendingAllocations = {ATK = 0, DEF = 0, VIT = 0, AGI = 0, DEX = 0, LUCK = 
 local equipmentBonuses = {ATK = 0, DEF = 0, VIT = 0, AGI = 0, DEX = 0, LUCK = 0}
 local virtualPoints = 0
 
+-- FUNGSI PEMFORMAT ANGKA RIBUAN NATIVE COMPATIBLE DENGAN LUAU ENGINE
+local function formatThousands(v)
+	local s = tostring(v)
+	return s:reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
+end
+
 -- LOAD AVATAR PLAYER SECARA NATIVE BERKECEPATAN TINGGI
 task.spawn(function()
 	local thumbType = Enum.ThumbnailType.HeadShot
@@ -116,7 +122,7 @@ local function updateVisuals()
 		currentStatsSnapshot[stat] = val + (pendingAllocations[stat] or 0)
 	end
 	local powerScore = calculatePowerScore(serverData.Level, currentStatsSnapshot)
-	ui.PowerLabel.Text = "POWER: " .. string.format('%,d', powerScore)
+	ui.PowerLabel.Text = "POWER: " .. formatThousands(powerScore)
 
 	local hasAnyPending = false
 
