@@ -26,6 +26,7 @@ local ui = AdminGui.Create(AdminGuiScreen)
 
 UIHelper.RegisterWindow(AdminGuiScreen)
 
+-- PENYELAMATAN DEKLARASI SINTAKSIS MANDIRI TERPISAH
 local activeSecurityToken = nil
 local searchResult = nil
 local lockedTargetUserId = nil
@@ -91,7 +92,7 @@ ui.LockBtn.MouseButton1Click:Connect(function()
 		ui.TargetLabel.Text = "Locked Target: None"
 		ui.TargetLabel.TextColor3 = Theme.Colors.TextDark
 		ui.LockBtn.Text = "LOCK"
-		ui.LockBtn.BackgroundColor3 = Theme.Colors.RowBg
+		ui.LockBtn.BackgroundColor3 = Theme.Colors.Theme
 	end
 end)
 
