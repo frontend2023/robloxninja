@@ -111,25 +111,6 @@ AllocateStatRequest.OnServerEvent:Connect(function(player, batchAllocations)
 	})
 end)
 
-ResetStatsRequest.OnServerEvent:Connect(function(player)
-	local data = SessionData[player.UserId]
-	if not data then return end
-	
-	data.Points = (data.Level - 1) * PlayerStatsConfig.POINTS_PER_LEVEL
-	for stat, _ in pairs(data.BaseStats) do
-		data.BaseStats[stat] = PlayerStatsConfig.INITIAL_STATS[stat]
-	end
-	
-	updatePlayerDerivedStats(player)
-	syncStatsToClient(player)
-	
-	PlayerStatsDatabase.SaveData(player, {
-		Level = data.Level,
-		Points = data.Points,
-		BaseStats = data.BaseStats
-	})
-end)
-
 function StatServiceAPI.GetPlayerData(userId)
 	return SessionData[userId]
 end
