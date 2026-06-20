@@ -71,13 +71,24 @@ ui.CloseBtn.MouseButton1Click:Connect(function()
 	ui.AdminPanel.Visible = false
 end)
 
+-- PEMICU JALUR GANDA: Pencarian lewat tombol FIND
 ui.SearchBtn.MouseButton1Click:Connect(function()
 	if ui.SearchBox.Text ~= "" then
+		print("[ADMIN DEBUG - CLIENT] Melakukan pencarian via tombol FIND. Query:", ui.SearchBox.Text)
+		AdminOpsEvent:FireServer("OP_S_77", ui.SearchBox.Text)
+	end
+end)
+
+-- PEMICU JALUR GANDA: Pencarian otomatis lewat tombol ENTER di keyboard
+ui.SearchBox.FocusLost:Connect(function(enterPressed)
+	if enterPressed and ui.SearchBox.Text ~= "" then
+		print("[ADMIN DEBUG - CLIENT] Melakukan pencarian via tombol ENTER. Query:", ui.SearchBox.Text)
 		AdminOpsEvent:FireServer("OP_S_77", ui.SearchBox.Text)
 	end
 end)
 
 ui.LockBtn.MouseButton1Click:Connect(function()
+	print("[ADMIN DEBUG - CLIENT] Tombol LOCK diklik. Status searchResult:", tostring(searchResult ~= nil))
 	if ui.LockBtn.Text == "LOCK" then
 		if searchResult then
 			lockedTargetUserId = searchResult.UserId
@@ -86,6 +97,7 @@ ui.LockBtn.MouseButton1Click:Connect(function()
 			ui.TargetLabel.TextColor3 = Theme.Colors.PointGreen
 			ui.LockBtn.Text = "UNLOCK"
 			ui.LockBtn.BackgroundColor3 = Theme.Colors.Danger
+			print("[ADMIN DEBUG - CLIENT] Berhasil MENGUNCI target:", lockedTargetName)
 		end
 	else
 		lockedTargetUserId = nil
@@ -93,6 +105,7 @@ ui.LockBtn.MouseButton1Click:Connect(function()
 		ui.TargetLabel.TextColor3 = Theme.Colors.TextDark
 		ui.LockBtn.Text = "LOCK"
 		ui.LockBtn.BackgroundColor3 = Theme.Colors.Theme
+		print("[ADMIN DEBUG - CLIENT] Berhasil MELEPAS kuncian target.")
 	end
 end)
 
@@ -149,6 +162,7 @@ ui.ConfirmOkBtn.MouseButton1Click:Connect(function()
 end)
 
 AdminOpsEvent.OnClientEvent:Connect(function(success, message, returnData)
+	print("[ADMIN DEBUG - CLIENT] Menerima balasan dari server. Success:", tostring(success), "Message:", message)
 	if message == "TOKEN_GRANTED" then
 		activeSecurityToken = returnData
 		ui.ConfirmPanel.Visible = true

@@ -15,20 +15,33 @@ local ServerStatsFolder = ServerScriptService:WaitForChild("Stats")
 local StatService = require(ServerStatsFolder:WaitForChild("StatService"))
 local HealthBarService = require(ServerStatsFolder:WaitForChild("HealthBarService"))
 
+-- BOOTLOADER ADMIN SERVICE (MENGAKTIFKAN MODUL SERVER ADMIN)
+local AdminFolder = ServerScriptService:WaitForChild("Admin")
+local AdminService = require(AdminFolder:WaitForChild("AdminService"))
+
 local RemotesFolder = ReplicatedStorage:WaitForChild("Remotes")
 local CombatRemotesFolder = RemotesFolder:WaitForChild("Combat")
 local AttackEvent = CombatRemotesFolder:WaitForChild("AttackEvent")
 local CombatResultEvent = CombatRemotesFolder:WaitForChild("CombatResultEvent")
 
 local function getNPCObjectStats(humanoid)
-	return {
-		Level = 1,
-		DerivedStats = {
-			MaxHP = humanoid.MaxHealth,
-			Defence = PlayerStatsConfig.INITIAL_PLAYER_INFO.Defence,
-			DodgeChance = 0.0
-		}
-	}
+	return {Level = 1, DerivedStats = {MaxHP = humanoid.MaxHealth, Defence = PlayerStatsConfig.INITIAL_PLAYER_INFO.Defence, DodgeChance = 0.0}}
+end
+
+local function onPlayerAdded(player)
+	player.CharacterAdded:Connect(function(character)
+		local humanoid = character:WaitForChild("Humanoid", 10)
+		if humanoid then
+			humanoid.Died:Connect(function()
+				HitSystem.ClearTracking(character)
+			end)
+		end
+	end)
+end
+
+Players.PlayerAdded:Connect(onPlayerAdded)
+for _, player in ipairs(Players:GetPlayers()) do
+	task.spawn(onPlayerAdded, player)
 end
 
 Players.PlayerRemoving:Connect(function(player)
@@ -48,15 +61,11 @@ AttackEvent.OnServerEvent:Connect(function(player, targetChar)
 	if not attackerData then return end
 
 	local isCooldownValid, cooldownErr = CombatSec.ValidateCooldown(player.UserId, attackerData.DerivedStats.AttackSpeed)
-	if not isCooldownValid then
-		warn("[COMBAT ERROR]", player.Name, cooldownErr)
-		return
-	end
+	if not isValid then return end
 
-	local targetPlayer = Players:GetPlayerFromCharacter(targetChar)
 	local targetData = nil
-
-	if targetPlayer then
+	if Players:GetPlayerFromCharacter(targetChar) then
+		local targetPlayer = Players:GetPlayerFromCharacter(targetChar)
 		targetData = StatService.GetPlayerData(targetPlayer.UserId)
 	else
 		targetData = getNPCObjectStats(targetHumanoid)
@@ -68,19 +77,19 @@ AttackEvent.OnServerEvent:Connect(function(player, targetChar)
 
 	local targetCurrentHP = 0
 	if combatResult.ResultType ~= "MISS" and combatResult.Damage > 0 then
-		if targetPlayer then
-			targetCurrentHP = HealthBarService.ApplyDamage(targetPlayer, combatResult.Damage)
+		if Players:GetPlayerFromCharacter(targetChar) then
+			targetCurrentHP = HealthBarService.ApplyDamage(Players:GetPlayerFromCharacter(targetChar), combatResult.Damage)
 		else
 			targetHumanoid.Health = math.max(0, targetHumanoid.Health - combatResult.Damage)
 			targetCurrentHP = targetHumanoid.Health
 		end
 	else
-		targetCurrentHP = targetPlayer and HealthBarService.GetHP(targetPlayer.UserId) or targetHumanoid.Health
+		targetCurrentHP = Players:GetPlayerFromCharacter(targetChar) and HealthBarService.GetHP(Players:GetPlayerFromCharacter(targetChar).UserId) or targetHumanoid.Health
 	end
 
 	CombatResultEvent:FireClient(player, combatResult)
-	if targetPlayer then
-		CombatResultEvent:FireClient(targetPlayer, combatResult)
+	if Players:GetPlayerFromCharacter(targetChar) then
+		CombatResultEvent:FireClient(Players:GetPlayerFromCharacter(targetChar), combatResult)
 	end
 
 	if targetCurrentHP <= 0 then
