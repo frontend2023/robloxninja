@@ -117,13 +117,14 @@ local function updateVisuals()
 		row.PlusButton.Visible = (virtualPoints > 0 and (baseVal + pendingVal) < PlayerStatsConfig.STAT_CAP)
 		row.MinusButton.Visible = (pendingVal > 0)
 
-		-- PENDAPAN GLOWING HIJAU SEGAR SAAT STATUS MENINGKAT
+		-- DESAIN HIBRIDA: TRANSPARANSI PENUH DEKORASI ESTETIK
 		if pendingVal > 0 then
 			hasAnyPending = true
-			row.RowObject.BackgroundColor3 = Color3.fromRGB(35, 75, 45) -- Hijau glowing tipis
+			row.RowObject.BackgroundTransparency = 0.85 -- Pendaran hijau transparan sangat tipis
+			row.RowObject.BackgroundColor3 = Color3.fromRGB(80, 180, 100)
 			row.RowObject:FindFirstChildOfClass("UIStroke").Color = Color3.fromRGB(80, 180, 100)
 		else
-			row.RowObject.BackgroundColor3 = Theme.Colors.RowBg
+			row.RowObject.BackgroundTransparency = 1 -- Transparan penuh (menghilangkan kotak abu-abu solid)
 			row.RowObject:FindFirstChildOfClass("UIStroke").Color = Color3.fromRGB(45, 45, 45)
 		end
 	end
