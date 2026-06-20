@@ -111,6 +111,25 @@ AllocateStatRequest.OnServerEvent:Connect(function(player, batchAllocations)
 	})
 end)
 
+ResetStatsRequest.OnServerEvent:Connect(function(player)
+	local data = SessionData[player.UserId]
+	if not data then return end
+	
+	data.Points = (data.Level - 1) * PlayerStatsConfig.POINTS_PER_LEVEL
+	for stat, _ in pairs(data.BaseStats) do
+		data.BaseStats[stat] = PlayerStatsConfig.INITIAL_STATS[stat]
+	end
+	
+	updatePlayerDerivedStats(player)
+	syncStatsToClient(player)
+	
+	PlayerStatsDatabase.SaveData(player, {
+		Level = data.Level,
+		Points = data.Points,
+		BaseStats = data.BaseStats
+	})
+end)
+
 function StatServiceAPI.GetPlayerData(userId)
 	return SessionData[userId]
 end
@@ -158,11 +177,12 @@ local function processReceipt(receiptInfo)
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 
-	-- RESET ATRIBUT PLAYER BERBAYAR (PRODUK ID: 3605649366)
+	-- RESET ATRIBUT PLAYER BERBAYAR KE LEVEL 1 & 0 POIN (PRODUK ID: 3605649366)
 	if receiptInfo.ProductId == 3605649366 then
 		local data = SessionData[player.UserId]
 		if data then
-			data.Points = (data.Level - 1) * PlayerStatsConfig.POINTS_PER_LEVEL
+			data.Level = 1
+			data.Points = 0
 			for stat, _ in pairs(data.BaseStats) do
 				data.BaseStats[stat] = PlayerStatsConfig.INITIAL_STATS[stat]
 			end
@@ -174,7 +194,7 @@ local function processReceipt(receiptInfo)
 				Points = data.Points,
 				BaseStats = data.BaseStats
 			})
-			print("[DEVELOPER PRODUCT] Player", player.Name, "successfully purchased Stats Reset. Transaction ID:", receiptInfo.PurchaseId)
+			print("[DEVELOPER PRODUCT] Player", player.Name, "successfully purchased a Full Stats & Level Reset. Transaction ID:", receiptInfo.PurchaseId)
 		end
 		return Enum.ProductPurchaseDecision.PurchaseGranted
 	end
