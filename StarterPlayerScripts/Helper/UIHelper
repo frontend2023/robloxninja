@@ -19,22 +19,19 @@ function UIHelper.RegisterWindow(screenGui)
 	if not screenGui or not screenGui:IsA("ScreenGui") then return end
 	managedGuis[screenGui] = true
 	UIHelper.BringToFront(screenGui)
-end
 
-UserInputService.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		local pos = UserInputService:GetMouseLocation()
-		local objects = playerGui:GetGuiObjectsAtPosition(pos.X, pos.Y)
-
-		for _, obj in ipairs(objects) do
-			local parentGui = obj:FindFirstAncestorOfClass("ScreenGui")
-			if parentGui and managedGuis[parentGui] then
-				UIHelper.BringToFront(parentGui)
-				break
-			end
+	-- EVENT DETEKSI KLIK NATIVE: Otomatis fokus saat bagian mana pun dari Panel diklik
+	for _, child in ipairs(screenGui:GetChildren()) do
+		if child:IsA("Frame") then
+			child.Active = true
+			child.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+					UIHelper.BringToFront(screenGui)
+				end
+			end)
 		end
 	end
-end)
+end
 
 function UIHelper.MakeDraggable(frame, handle)
 	handle = handle or frame
@@ -78,22 +75,9 @@ function UIHelper.MakeDraggable(frame, handle)
 
 	handle.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-
-			local mousePos = UserInputService:GetMouseLocation()
-			local objectsUnderMouse = playerGui:GetGuiObjectsAtPosition(mousePos.X, mousePos.Y)
-			local topGui = nil
-
-			for _, obj in ipairs(objectsUnderMouse) do
-				local parentGui = obj:FindFirstAncestorOfClass("ScreenGui")
-				if parentGui and managedGuis[parentGui] then
-					topGui = parentGui
-					break
-				end
-			end
-
 			local myGui = frame:FindFirstAncestorOfClass("ScreenGui")
-			if topGui ~= myGui then
-				return
+			if myGui then
+				UIHelper.BringToFront(myGui)
 			end
 
 			dragging = true
