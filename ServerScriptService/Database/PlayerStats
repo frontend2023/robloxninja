@@ -1,58 +1,128 @@
-print("[DEBUG] Loading Script: " .. script:GetFullName())
-local DataStoreService = game:GetService("DataStoreService")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local DataStoreService = game:GetService("DataStoreService")
+
 local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
+
 local PlayerStatsStore = nil
 local VersionStore = nil
 local isDataStoreAvailable = false
 local currentDbVersion = 1
+
+local MockStorage = {}
+
 local success, err = pcall(function()
 	PlayerStatsStore = DataStoreService:GetDataStore("PlayerStats_v2")
 	VersionStore = DataStoreService:GetDataStore("PlayerStats_Metadata")
 	isDataStoreAvailable = true
 end)
+
+if not success then
+	warn("[DATABASE WARNING] DataStore tidak tersedia. Menggunakan MockStorage lokal.")
+end
+
 if isDataStoreAvailable then
 	pcall(function()
 		local ver = VersionStore:GetAsync("GlobalDbVersion")
-		if ver then currentDbVersion = ver else VersionStore:SetAsync("GlobalDbVersion", 1) end
+		if ver then
+			currentDbVersion = ver
+		else
+			VersionStore:SetAsync("GlobalDbVersion", 1)
+		end
 	end)
 end
-local PlayerStatsDatabase = {}
-local MockStorage = {}
+
 local function getPlayerKey(userId)
 	return "Player_v" .. tostring(currentDbVersion) .. "_" .. tostring(userId)
 end
+
+local PlayerStatsDatabase = {}
+
 function PlayerStatsDatabase.LoadData(player)
 	local key = getPlayerKey(player.UserId)
-	local defaultData = {Level = 1, Points = 0, BaseStats = {}}
-	for stat, val in pairs(PlayerStatsConfig.INITIAL_STATS) do defaultData.BaseStats[stat] = val end
+	local defaultData = {
+		Level = 1,
+		Points = 0,
+		BaseStats = {}
+	}
+	
+	for stat, val in pairs(PlayerStatsConfig.INITIAL_STATS) do
+		defaultData.BaseStats[stat] = val
+	end
+
 	if not isDataStoreAvailable then
-		if not MockStorage[key] then MockStorage[key] = defaultData end
+		if not MockStorage[key] then
+			MockStorage[key] = defaultData
+		end
 		return MockStorage[key]
 	end
+
 	local loadedData = nil
-	local loadSuccess, loadErr = pcall(function() loadedData = PlayerStatsStore:GetAsync(key) end)
+	local loadSuccess, loadErr = pcall(function()
+		loadedData = PlayerStatsStore:GetAsync(key)
+	end)
+
 	if loadSuccess and loadedData then
-		if not loadedData.BaseStats then loadedData.BaseStats = defaultData.BaseStats end
+		if not loadedData.BaseStats then
+			loadedData.BaseStats = defaultData.BaseStats
+		else
+			for stat, val in pairs(PlayerStatsConfig.INITIAL_STATS) do
+				if loadedData.BaseStats[stat] == nil then
+					loadedData.BaseStats[stat] = val
+				end
+			end
+		end
 		return loadedData
-	else return defaultData end
+	else
+		if loadErr then
+			warn("[DATABASE ERROR] Gagal memuat data:", loadErr)
+		end
+		return defaultData
+	end
 end
+
 function PlayerStatsDatabase.SaveData(player, data)
 	local key = getPlayerKey(player.UserId)
-	if not data then return end
-	if not isDataStoreAvailable then MockStorage[key] = data return true end
-	local saveSuccess, saveErr = pcall(function() PlayerStatsStore:SetAsync(key, data) end)
+	if not isDataStoreAvailable then
+		MockStorage[key] = data
+		return true
+	end
+
+	local saveSuccess, saveErr = pcall(function()
+		PlayerStatsStore:SetAsync(key, data)
+	end)
+
+	if not saveSuccess then
+		warn("[DATABASE ERROR] Gagal menyimpan data untuk Player:", player.Name, "Error:", saveErr)
+	end
 	return saveSuccess
 end
+
 function PlayerStatsDatabase.ResetPlayerData(userId)
 	local key = getPlayerKey(userId)
-	if not isDataStoreAvailable then MockStorage[key] = nil return true end
-	local deleteSuccess, err = pcall(function() PlayerStatsStore:RemoveAsync(key) end)
+	if not isDataStoreAvailable then
+		MockStorage[key] = nil
+		return true
+	end
+
+	local deleteSuccess, deleteErr = pcall(function()
+		PlayerStatsStore:RemoveAsync(key)
+	end)
+
+	if not deleteSuccess then
+		warn("[DATABASE ERROR] Gagal menghapus data target:", userId, deleteErr)
+	end
 	return deleteSuccess
 end
+
 function PlayerStatsDatabase.IncrementGlobalVersion()
 	currentDbVersion = currentDbVersion + 1
-	if isDataStoreAvailable then pcall(function() VersionStore:SetAsync("GlobalDbVersion", currentDbVersion) end) end
+	if isDataStoreAvailable then
+		pcall(function()
+			VersionStore:SetAsync("GlobalDbVersion", currentDbVersion)
+		end)
+	end
 	return currentDbVersion
 end
+
 return PlayerStatsDatabase

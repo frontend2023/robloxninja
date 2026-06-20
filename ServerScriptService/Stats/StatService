@@ -1,23 +1,31 @@
-print("[DEBUG] Loading Script: " .. script:GetFullName())
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+
 local StatServiceAPI = {}
 local statsUpdatedCallback = nil
-function StatServiceAPI.OnStatsUpdated(callback) statsUpdatedCallback = callback end
+
+function StatServiceAPI.OnStatsUpdated(callback)
+	statsUpdatedCallback = callback
+end
+
 local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
 local ModulesFolder = ReplicatedStorage:WaitForChild("Modules")
 local StatsFolder = ModulesFolder:WaitForChild("Stats")
 local StatSystem = require(StatsFolder:WaitForChild("StatSystem"))
+
 local SecurityFolder = ServerScriptService:WaitForChild("Security")
 local PlayerStatsSec = require(SecurityFolder:WaitForChild("PlayerStats"))
+
 local DatabaseFolder = ServerScriptService:WaitForChild("Database")
 local PlayerStatsDatabase = require(DatabaseFolder:WaitForChild("PlayerStats"))
+
 local RemotesFolder = ReplicatedStorage:WaitForChild("Remotes")
 local StatsRemotesFolder = RemotesFolder:WaitForChild("Stats")
 local StatUpdateEvent = StatsRemotesFolder:WaitForChild("StatUpdateEvent")
 local AllocateStatRequest = StatsRemotesFolder:WaitForChild("AllocateStatRequest")
 local ResetStatsRequest = StatsRemotesFolder:WaitForChild("ResetStatsRequest")
+
 local SessionData = {}
 local IgnoreSaveList = {}
 local isGlobalResetActive = false
@@ -25,75 +33,142 @@ local isGlobalResetActive = false
 local function syncStatsToClient(player)
 	local data = SessionData[player.UserId]
 	if not data then return end
-	StatUpdateEvent:FireClient(player, {Level = data.Level, Points = data.Points, BaseStats = data.BaseStats, DerivedStats = data.DerivedStats})
+	
+	StatUpdateEvent:FireClient(player, {
+		Level = data.Level,
+		Points = data.Points,
+		BaseStats = data.BaseStats,
+		DerivedStats = data.DerivedStats
+	})
 end
+
 local function updatePlayerDerivedStats(player)
 	local data = SessionData[player.UserId]
 	if not data then return end
+	
 	local oldMaxHP = data.DerivedStats.MaxHP or PlayerStatsConfig.INITIAL_PLAYER_INFO.HP
 	data.DerivedStats = StatSystem.GetDerivedStats(data.Level, data.BaseStats, nil)
 	local newMaxHP = data.DerivedStats.MaxHP
-	if oldMaxHP ~= newMaxHP and statsUpdatedCallback then statsUpdatedCallback(player, oldMaxHP, newMaxHP) end
+	
+	if oldMaxHP ~= newMaxHP and statsUpdatedCallback then
+		statsUpdatedCallback(player, oldMaxHP, newMaxHP)
+	end
 end
+
 local function onPlayerAdded(player)
 	local loadedData = PlayerStatsDatabase.LoadData(player)
-	SessionData[player.UserId] = {Level = loadedData.Level or 1, Points = loadedData.Points or 0, BaseStats = loadedData.BaseStats, DerivedStats = {}}
+	SessionData[player.UserId] = {
+		Level = loadedData.Level or 1,
+		Points = loadedData.Points or 0,
+		BaseStats = loadedData.BaseStats,
+		DerivedStats = {}
+	}
 	updatePlayerDerivedStats(player)
 	syncStatsToClient(player)
 end
+
 local function onPlayerRemoving(player)
 	local data = SessionData[player.UserId]
 	if data and not IgnoreSaveList[player.UserId] and not isGlobalResetActive then
-		PlayerStatsDatabase.SaveData(player, { Level = data.Level, Points = data.Points, BaseStats = data.BaseStats })
+		PlayerStatsDatabase.SaveData(player, {
+			Level = data.Level,
+			Points = data.Points,
+			BaseStats = data.BaseStats
+		})
 	end
 	SessionData[player.UserId] = nil
 	IgnoreSaveList[player.UserId] = nil
 end
+
 Players.PlayerAdded:Connect(onPlayerAdded)
 Players.PlayerRemoving:Connect(onPlayerRemoving)
-for _, player in ipairs(Players:GetPlayers()) do task.spawn(onPlayerAdded, player) end
+
+for _, player in ipairs(Players:GetPlayers()) do
+	task.spawn(onPlayerAdded, player)
+end
+
 AllocateStatRequest.OnServerEvent:Connect(function(player, batchAllocations)
 	local data = SessionData[player.UserId]
 	if not data then return end
+	
 	local isValid, errMsg = PlayerStatsSec.ValidateAllocation(data, batchAllocations)
 	if not isValid then return end
+	
 	local totalSpent = 0
-	for statName, amount in pairs(batchAllocations) do data.BaseStats[statName] = data.BaseStats[statName] + amount totalSpent = totalSpent + amount end
+	for statName, amount in pairs(batchAllocations) do
+		data.BaseStats[statName] = data.BaseStats[statName] + amount
+		totalSpent = totalSpent + amount
+	end
+	
 	data.Points = data.Points - totalSpent
 	updatePlayerDerivedStats(player)
 	syncStatsToClient(player)
-	PlayerStatsDatabase.SaveData(player, { Level = data.Level, Points = data.Points, BaseStats = data.BaseStats })
+	
+	PlayerStatsDatabase.SaveData(player, {
+		Level = data.Level,
+		Points = data.Points,
+		BaseStats = data.BaseStats
+	})
 end)
+
 ResetStatsRequest.OnServerEvent:Connect(function(player)
 	local data = SessionData[player.UserId]
 	if not data then return end
+	
 	data.Points = (data.Level - 1) * PlayerStatsConfig.POINTS_PER_LEVEL
-	for stat, _ in pairs(data.BaseStats) do data.BaseStats[stat] = PlayerStatsConfig.INITIAL_STATS[stat] end
+	for stat, _ in pairs(data.BaseStats) do
+		data.BaseStats[stat] = PlayerStatsConfig.INITIAL_STATS[stat]
+	end
+	
 	updatePlayerDerivedStats(player)
 	syncStatsToClient(player)
-	PlayerStatsDatabase.SaveData(player, { Level = data.Level, Points = data.Points, BaseStats = data.BaseStats })
+	
+	PlayerStatsDatabase.SaveData(player, {
+		Level = data.Level,
+		Points = data.Points,
+		BaseStats = data.BaseStats
+	})
 end)
-function StatServiceAPI.GetPlayerData(userId) return SessionData[userId] end
-function StatServiceAPI.SyncPlayerData(player) syncStatsToClient(player) end
+
+function StatServiceAPI.GetPlayerData(userId)
+	return SessionData[userId]
+end
+
+function StatServiceAPI.SyncPlayerData(player)
+	syncStatsToClient(player)
+end
+
 function StatServiceAPI.AddLevel(player, amount)
 	local data = SessionData[player.UserId]
 	if not data then return end
+	
 	local targetLevel = math.min(data.Level + math.max(0, amount), PlayerStatsConfig.LEVEL_CAP)
 	local levelGained = targetLevel - data.Level
+	
 	data.Level = targetLevel
 	data.Points = data.Points + (levelGained * PlayerStatsConfig.POINTS_PER_LEVEL)
+	
 	updatePlayerDerivedStats(player)
 	syncStatsToClient(player)
-	PlayerStatsDatabase.SaveData(player, { Level = data.Level, Points = data.Points, BaseStats = data.BaseStats })
+	
+	PlayerStatsDatabase.SaveData(player, {
+		Level = data.Level,
+		Points = data.Points,
+		BaseStats = data.BaseStats
+	})
 end
+
 function StatServiceAPI.IgnoreSessionSave(userId)
 	IgnoreSaveList[userId] = true
 end
+
 function StatServiceAPI.IgnoreAllSessionSaves()
 	isGlobalResetActive = true
 end
+
 function StatServiceAPI.ReloadPlayerData(player)
 	onPlayerAdded(player)
 end
+
 _G.StatService = StatServiceAPI
 return StatServiceAPI

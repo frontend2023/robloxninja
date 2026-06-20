@@ -1,50 +1,89 @@
-print("[DEBUG] Loading Script: " .. script:GetFullName())
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+
 local PlayerStatsConfig = require(ReplicatedStorage:WaitForChild("PlayerStatsConfig"))
 local ModulesFolder = ReplicatedStorage:WaitForChild("Modules")
-local StatsFolder = ModulesFolder:WaitForChild("Stats")
 local CombatFolder = ModulesFolder:WaitForChild("Combat")
-local StatSystem = require(StatsFolder:WaitForChild("StatSystem"))
-local HitSystem = require(CombatFolder:WaitForChild("HitSystem"))
 local CombatSystem = require(CombatFolder:WaitForChild("CombatSystem"))
+local HitSystem = require(CombatFolder:WaitForChild("HitSystem"))
+
+local SecurityFolder = ServerScriptService:WaitForChild("Security")
+local CombatSec = require(SecurityFolder:WaitForChild("Combat"))
+
 local ServerStatsFolder = ServerScriptService:WaitForChild("Stats")
 local StatService = require(ServerStatsFolder:WaitForChild("StatService"))
 local HealthBarService = require(ServerStatsFolder:WaitForChild("HealthBarService"))
-local SecurityFolder = ServerScriptService:WaitForChild("Security")
-local CombatSec = require(SecurityFolder:WaitForChild("Combat"))
-local ServerAdminFolder = ServerScriptService:WaitForChild("Admin")
-require(ServerAdminFolder:WaitForChild("AdminService"))
+
 local RemotesFolder = ReplicatedStorage:WaitForChild("Remotes")
 local CombatRemotesFolder = RemotesFolder:WaitForChild("Combat")
 local AttackEvent = CombatRemotesFolder:WaitForChild("AttackEvent")
 local CombatResultEvent = CombatRemotesFolder:WaitForChild("CombatResultEvent")
+
 local function getNPCObjectStats(humanoid)
-	return {Level = 1, DerivedStats = {MaxHP = humanoid.MaxHealth, Defence = PlayerStatsConfig.INITIAL_PLAYER_INFO.Defence, DodgeChance = 0.0}}
+	return {
+		Level = 1,
+		DerivedStats = {
+			MaxHP = humanoid.MaxHealth,
+			Defence = PlayerStatsConfig.INITIAL_PLAYER_INFO.Defence,
+			DodgeChance = 0.0
+		}
+	}
 end
+
+Players.PlayerRemoving:Connect(function(player)
+	CombatSec.ClearCooldownTrack(player.UserId)
+	HitSystem.ClearTracking(player)
+end)
+
 AttackEvent.OnServerEvent:Connect(function(player, targetChar)
 	local attackerChar = player.Character
 	if not attackerChar or not targetChar then return end
+
 	local attackerHumanoid = attackerChar:FindFirstChildOfClass("Humanoid")
 	local targetHumanoid = targetChar:FindFirstChildOfClass("Humanoid")
-	if not attackerHumanoid or not targetHumanoid then return end
-	if attackerHumanoid.Health <= 0 or targetHumanoid.Health <= 0 then return end
-	local isClose, rangeErr = CombatSec.ValidateProximity(attackerChar, targetChar)
-	if not isClose then return end
+	if not attackerHumanoid or not targetHumanoid or attackerHumanoid.Health <= 0 or targetHumanoid.Health <= 0 then return end
+
 	local attackerData = StatService.GetPlayerData(player.UserId)
 	if not attackerData then return end
-	local isCooldownValid, speedErr = CombatSec.ValidateCooldown(player.UserId, attackerData.DerivedStats.AttackSpeed or 1.0)
-	if not isCooldownValid then return end
-	local targetData = Players:GetPlayerFromCharacter(targetChar) and StatService.GetPlayerData(Players:GetPlayerFromCharacter(targetChar).UserId) or getNPCObjectStats(targetHumanoid)
+
+	local isCooldownValid, cooldownErr = CombatSec.ValidateCooldown(player.UserId, attackerData.DerivedStats.AttackSpeed)
+	if not isCooldownValid then
+		warn("[COMBAT ERROR]", player.Name, cooldownErr)
+		return
+	end
+
+	local targetPlayer = Players:GetPlayerFromCharacter(targetChar)
+	local targetData = nil
+
+	if targetPlayer then
+		targetData = StatService.GetPlayerData(targetPlayer.UserId)
+	else
+		targetData = getNPCObjectStats(targetHumanoid)
+	end
+
 	if not targetData then return end
+
 	local combatResult = CombatSystem.ResolveAttack(attackerChar, targetChar, attackerData, targetData)
+
 	local targetCurrentHP = 0
 	if combatResult.ResultType ~= "MISS" and combatResult.Damage > 0 then
-		if Players:GetPlayerFromCharacter(targetChar) then targetCurrentHP = HealthBarService.ApplyDamage(Players:GetPlayerFromCharacter(targetChar), combatResult.Damage)
-		else targetHumanoid.Health = math.max(0, targetHumanoid.Health - combatResult.Damage) targetCurrentHP = targetHumanoid.Health end
-	else targetCurrentHP = Players:GetPlayerFromCharacter(targetChar) and HealthBarService.GetHP(Players:GetPlayerFromCharacter(targetChar).UserId) or targetHumanoid.Health end
-	if targetCurrentHP <= 0 then HitSystem.ClearTracking(targetChar) end
-	CombatResultEvent:FireClient(player, {ResultType = combatResult.ResultType, Damage = combatResult.Damage, TargetHP = targetCurrentHP, TargetInstance = targetChar})
+		if targetPlayer then
+			targetCurrentHP = HealthBarService.ApplyDamage(targetPlayer, combatResult.Damage)
+		else
+			targetHumanoid.Health = math.max(0, targetHumanoid.Health - combatResult.Damage)
+			targetCurrentHP = targetHumanoid.Health
+		end
+	else
+		targetCurrentHP = targetPlayer and HealthBarService.GetHP(targetPlayer.UserId) or targetHumanoid.Health
+	end
+
+	CombatResultEvent:FireClient(player, combatResult)
+	if targetPlayer then
+		CombatResultEvent:FireClient(targetPlayer, combatResult)
+	end
+
+	if targetCurrentHP <= 0 then
+		HitSystem.ClearTracking(targetChar)
+	end
 end)
-Players.PlayerRemoving:Connect(function(player) CombatSec.ClearCooldownTrack(player.UserId) HitSystem.ClearTracking(player) end)
