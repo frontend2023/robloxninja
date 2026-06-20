@@ -62,29 +62,6 @@ task.spawn(function()
 	end
 end)
 
-local function selectTab(tabType)
-	if tabType == "BASE" then
-		ui.BaseStatsFrame.Visible = true
-		ui.StatsInfoFrame.Visible = false
-		ui.BaseTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		ui.InfoTabBtn.TextColor3 = Color3.fromRGB(130, 130, 130)
-		TweenService:Create(ui.ActiveIndicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			Position = UDim2.new(0, 0, 1, -2)
-		}):Play()
-	else
-		ui.BaseStatsFrame.Visible = false
-		ui.StatsInfoFrame.Visible = true
-		ui.BaseTabBtn.TextColor3 = Color3.fromRGB(130, 130, 130)
-		ui.InfoTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		TweenService:Create(ui.ActiveIndicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			Position = UDim2.new(0.5, 0, 1, -2)
-		}):Play()
-	end
-end
-
-ui.BaseTabBtn.MouseButton1Click:Connect(function() selectTab("BASE") end)
-ui.InfoTabBtn.MouseButton1Click:Connect(function() selectTab("INFO") end)
-
 ui.CloseBtn.MouseButton1Click:Connect(function()
 	ui.StatPanel.Visible = false
 	ui.ConfirmPanel.Visible = false
@@ -113,7 +90,6 @@ end
 local function updateVisuals()
 	if not serverData then return end
 
-	-- Gabungkan data level & display name agar terlihat padat & menonjol
 	ui.NameLabel.Text = player.DisplayName .. " (Lv. " .. tostring(serverData.Level) .. ")"
 	ui.PointsLabel.Text = "Points: " .. tostring(virtualPoints)
 
@@ -141,7 +117,7 @@ local function updateVisuals()
 		row.PlusButton.Visible = (virtualPoints > 0 and (baseVal + pendingVal) < PlayerStatsConfig.STAT_CAP)
 		row.MinusButton.Visible = (pendingVal > 0)
 
-		-- PENDAPAN GLOWING HIJAU SEGAR SAAT STATUS MENINGKAT (VISUAL FEEDBACK FORUM)
+		-- PENDAPAN GLOWING HIJAU SEGAR SAAT STATUS MENINGKAT
 		if pendingVal > 0 then
 			hasAnyPending = true
 			row.RowObject.BackgroundColor3 = Color3.fromRGB(35, 75, 45) -- Hijau glowing tipis
