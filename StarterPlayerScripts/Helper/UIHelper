@@ -44,6 +44,14 @@ function UIHelper.MakeDraggable(frame, handle)
 	local mouseStartPos
 	local frameStartUDim
 
+	-- SISTEM SENSOR PENYETEL ULANG POSISI DEFAULT (AUTO-CENTER ON REOPEN)
+	local originalPosition = frame.Position
+	frame:GetPropertyChangedSignal("Visible"):Connect(function()
+		if frame.Visible then
+			frame.Position = originalPosition
+		end
+	end)
+
 	local function update(input)
 		local delta = input.Position - mouseStartPos
 		local viewportSize = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(0, 0)
