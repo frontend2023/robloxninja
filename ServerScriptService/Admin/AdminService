@@ -76,7 +76,11 @@ AdminOpsEvent.OnServerEvent:Connect(function(player, op, payload)
 	elseif op == "OP_L_88" then
 		local targetPlayer = Players:GetPlayerByUserId(tonumber(payload.UserId))
 		if targetPlayer then
-			StatService.AddLevel(targetPlayer, tonumber(payload.Amount) or 1)
+			-- VALIDASI DOUBLE-PROTEKSI SERVER: Batasi level tambahan maksimal 100 secara defensif
+			local rawAmount = tonumber(payload.Amount) or 1
+			local amount = math.clamp(rawAmount, 1, 100)
+			
+			StatService.AddLevel(targetPlayer, amount)
 			local data = StatService.GetPlayerData(targetPlayer.UserId)
 			AdminOpsEvent:FireClient(player, true, "Level diperbarui.", {
 				Name = targetPlayer.Name,
@@ -90,7 +94,11 @@ AdminOpsEvent.OnServerEvent:Connect(function(player, op, payload)
 		if targetPlayer then
 			local data = StatService.GetPlayerData(targetPlayer.UserId)
 			if data then
-				data.Points = math.max(0, data.Points + (tonumber(payload.Amount) or 0))
+				-- VALIDASI DOUBLE-PROTEKSI SERVER: Batasi poin tambahan maksimal 1000 secara defensif
+				local rawAmount = tonumber(payload.Amount) or 0
+				local amount = math.clamp(rawAmount, 0, 1000)
+				
+				data.Points = math.max(0, data.Points + amount)
 				StatService.SyncPlayerData(targetPlayer)
 				PlayerStatsDatabase.SaveData(targetPlayer, {
 					Level = data.Level,

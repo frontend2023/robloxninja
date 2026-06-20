@@ -29,10 +29,11 @@ function AdminGui.Create(adminGuiScreen)
 
 	UIHelper.MakeDraggable(ui.AdminPanel, PanelTitle)
 
+	-- PENYELARASAN RASIO DAN UKURAN (IDENTIK DENGAN PLAYERSTATS CLOSE BTN)
 	ui.CloseBtn = Instance.new("TextButton")
 	ui.CloseBtn.Name = "CloseBtn"
-	ui.CloseBtn.Size = UDim2.new(0, 16, 0, 16)
-	ui.CloseBtn.Position = UDim2.new(1, -24, 0, 9)
+	ui.CloseBtn.Size = UDim2.new(0, 14, 0, 14)
+	ui.CloseBtn.Position = UDim2.new(1, -24, 0, 12)
 	ui.CloseBtn.BackgroundColor3 = Theme.Colors.Danger
 	ui.CloseBtn.Text = ""
 	ui.CloseBtn.Parent = ui.AdminPanel
@@ -203,13 +204,13 @@ function AdminGui.Create(adminGuiScreen)
 	rgCorner.Parent = ui.ResetGlobalBtn
 
 	ui.ConfirmPanel = UIHelper.MakeRoundedFrame(ui.AdminPanel, "ConfirmPanel", UDim2.new(1, 0, 1, 0), UDim2.new(0, 0, 0, 0), Color3.fromRGB(15, 15, 15), Theme.CornerRadius)
-	ui.ConfirmPanel.BackgroundTransparency = 0.1
+	ui.ConfirmPanel.BackgroundTransparency = 0.15
 	ui.ConfirmPanel.ZIndex = 10
 	ui.ConfirmPanel.Visible = false
 
 	local ConfirmTitle = Instance.new("TextLabel")
-	ConfirmTitle.Size = UDim2.new(1, 0, 0, 60)
-	ConfirmTitle.Position = UDim2.new(0, 0, 0, 40)
+	ConfirmTitle.Size = UDim2.new(1, -24, 0, 60)
+	ConfirmTitle.Position = UDim2.new(0, 12, 0, 40)
 	ConfirmTitle.BackgroundTransparency = 1
 	ConfirmTitle.Font = Theme.FontBold
 	ConfirmTitle.TextColor3 = Theme.Colors.Danger

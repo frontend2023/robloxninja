@@ -44,6 +44,28 @@ local function showNotification(text, isError)
 	end)
 end
 
+-- SISTEM FILTER INPUT: Hanya biarkan angka & kunci batas atas secara real-time
+local function makeNumericOnly(textBox, maxValue)
+	textBox:GetPropertyChangedSignal("Text"):Connect(function()
+		local text = textBox.Text
+		local cleanText = text:gsub("%D", "") -- Buang semua karakter selain angka
+		
+		if cleanText ~= "" then
+			local num = tonumber(cleanText)
+			if num and num > maxValue then
+				cleanText = tostring(maxValue) -- Kunci batas maksimum
+			end
+		end
+		
+		if text ~= cleanText then
+			textBox.Text = cleanText
+		end
+	end)
+end
+
+makeNumericOnly(ui.LevelInput, 100)   -- Maksimal Level 100
+makeNumericOnly(ui.PointsInput, 1000) -- Maksimal Poin 1000
+
 local function selectTab(tabType)
 	if tabType == "PLAYER" then
 		ui.PlayerTabFrame.Visible = true
@@ -106,7 +128,8 @@ end)
 
 ui.LevelBtn.MouseButton1Click:Connect(function()
 	if lockedTargetUserId then
-		AdminOpsEvent:FireServer("OP_L_88", {UserId = lockedTargetUserId, Amount = tonumber(ui.LevelInput.Text) or 1})
+		local amt = tonumber(ui.LevelInput.Text) or 1
+		AdminOpsEvent:FireServer("OP_L_88", {UserId = lockedTargetUserId, Amount = amt})
 	else
 		showNotification("Pilih dan Kunci (LOCK) target terlebih dahulu!", true)
 	end
@@ -114,7 +137,8 @@ end)
 
 ui.PointsBtn.MouseButton1Click:Connect(function()
 	if lockedTargetUserId then
-		AdminOpsEvent:FireServer("OP_P_99", {UserId = lockedTargetUserId, Amount = tonumber(ui.PointsInput.Text) or 1})
+		local amt = tonumber(ui.PointsInput.Text) or 0
+		AdminOpsEvent:FireServer("OP_P_99", {UserId = lockedTargetUserId, Amount = amt})
 	else
 		showNotification("Pilih dan Kunci (LOCK) target terlebih dahulu!", true)
 	end
